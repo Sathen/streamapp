@@ -4,7 +4,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:stream_flutter/client/online_server_api.dart';
-import 'package:stream_flutter/models/VideoStreams.dart';
+import 'package:stream_flutter/models/video_streams.dart';
 import 'package:stream_flutter/models/media_detail.dart';
 import 'package:stream_flutter/models/online_media_details_entity.dart';
 import 'package:stream_flutter/screens/widgets/actions.dart';
@@ -44,9 +44,9 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
       body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildBody(),
+      _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildBody(),
     );
   }
 
@@ -88,7 +88,10 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
   Widget _buildOverviewSection() {
     return Text(
       _mediaDetails.description,
-      style: Theme.of(context).textTheme.bodyMedium,
+      style: Theme
+          .of(context)
+          .textTheme
+          .bodyMedium,
     );
   }
 
@@ -110,22 +113,24 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
         IconButton(
           icon: Icon(
             Icons.favorite,
-            color: Theme.of(context).colorScheme.secondary,
+            color: Theme
+                .of(context)
+                .colorScheme
+                .secondary,
           ),
           onPressed:
-              () => {
-                //TODO: not implemented
-              },
+              () =>
+          {
+            //TODO: not implemented
+          },
         ),
       ],
     );
   }
 
-  Future<void> showStreamSelectorFromModel(
-    BuildContext context,
-    String path,
-    void Function(String url) onQualitySelected,
-  ) async {
+  Future<void> showStreamSelectorFromModel(BuildContext context,
+      String path,
+      void Function(String url) onQualitySelected,) async {
     VideoStreams streams = await serverApi.getVideoStreams(path);
 
     if (!mounted) return;
@@ -133,10 +138,6 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (context) {
         String? selectedSource;
         VideoStream? selectedTranslator;
@@ -148,57 +149,58 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    "📡 Оберіть джерело",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-
                   // Step 1: Source
-                  if (selectedSource == null)
-                    Wrap(
-                      spacing: 12,
-                      children:
-                          streams.streams.keys.map((source) {
-                            return ElevatedButton(
-                              onPressed:
-                                  () => setState(() => selectedSource = source),
-                              child: Text(source),
-                            );
-                          }).toList(),
+                  if (selectedSource == null) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      "📡 Оберіть джерело",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    const SizedBox(height: 8),
+                    ...streams.streams.keys.map((source) {
+                      return ListTile(
+                        title: Text(source),
+                        onTap: () => setState(() => selectedSource = source),
+                      );
+                    }),
+                  ],
 
                   // Step 2: Translators
                   if (selectedSource != null && selectedTranslator == null) ...[
                     const SizedBox(height: 16),
-                    const Text("🗣 Перекладач"),
+                    const Text(
+                      "🗣 Перекладач",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 8),
                     ...streams.streams[selectedSource]!.map((translator) {
                       return ListTile(
                         title: Text(translator.name),
                         onTap:
                             () =>
-                                setState(() => selectedTranslator = translator),
+                            setState(() => selectedTranslator = translator),
                       );
                     }),
                   ],
 
+
                   // Step 3: Quality
                   if (selectedTranslator != null) ...[
                     const SizedBox(height: 16),
-                    const Text("🎞 Якість"),
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          selectedTranslator!.links.map((link) {
-                            return ElevatedButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                                onQualitySelected(link.url);
-                              },
-                              child: Text(link.quality),
-                            );
-                          }).toList(),
+                    const Text(
+                      "🎞 Якість",
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    const SizedBox(height: 8),
+                    ...selectedTranslator!.links.map((link) {
+                      return ListTile(
+                        title: Text(link.quality),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          onQualitySelected(link.url);
+                        },
+                      );
+                    }),
                   ],
                 ],
               ),
@@ -278,20 +280,22 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
           minimumSize: const Size(double.infinity, 48),
         ),
         onPressed:
-            _loadingEpisodeNumber != null ? null : () async {
-                  setState(() {
-                    _loadingEpisodeNumber =
-                        -1; // Використовуємо -1 для позначення завантаження фільму
-                  });
-                  await showStreamSelectorFromModel(
-                    context,
-                    _mediaDetails.embedUrl ?? "",
-                    _showPlayOptions,
-                  );
-                  setState(() {
-                    _loadingEpisodeNumber = null;
-                  });
-                },
+        _loadingEpisodeNumber != null
+            ? null
+            : () async {
+          setState(() {
+            _loadingEpisodeNumber =
+            -1; // Використовуємо -1 для позначення завантаження фільму
+          });
+          await showStreamSelectorFromModel(
+            context,
+            _mediaDetails.embedUrl ?? "",
+            _showPlayOptions,
+          );
+          setState(() {
+            _loadingEpisodeNumber = null;
+          });
+        },
       );
     }
 
@@ -314,9 +318,11 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
                   label: Text('Сезон ${season.seasonNumber}'),
                   selected: isSelected,
                   onSelected:
-                      _loadingEpisodeNumber != null ? null : (_) {
-                            setState(() => _selectedSeasonIndex = index);
-                            },
+                  _loadingEpisodeNumber != null
+                      ? null
+                      : (_) {
+                    setState(() => _selectedSeasonIndex = index);
+                  },
                 ),
               );
             },
@@ -329,7 +335,7 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount:
-              _mediaDetails.seasons[_selectedSeasonIndex].numberOfEpisodes,
+          _mediaDetails.seasons[_selectedSeasonIndex].numberOfEpisodes,
           itemBuilder: (context, index) {
             final season = _mediaDetails.seasons[_selectedSeasonIndex];
             final episodeNumber = index + 1;
@@ -342,35 +348,35 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
                 title: Text(episodeTitle),
                 // Відображаємо індикатор завантаження, якщо цей епізод завантажується
                 trailing:
-                    _loadingEpisodeNumber == episodeNumber
-                        ? const SizedBox(
-                          width: 24, // Розмір спінера
-                          height: 24, // Розмір спінера
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                        : const Icon(Icons.play_arrow),
+                _loadingEpisodeNumber == episodeNumber
+                    ? const SizedBox(
+                  width: 24, // Розмір спінера
+                  height: 24, // Розмір спінера
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+                    : const Icon(Icons.play_arrow),
                 onTap:
-                    _loadingEpisodeNumber != null // Вимикаємо натискання, якщо будь-який епізод завантажується
-                        ? null : () async {
-                          // Встановлюємо номер епізоду, який завантажується, і оновлюємо UI
-                          setState(() {
-                            _loadingEpisodeNumber = episodeNumber;
-                          });
+                _loadingEpisodeNumber !=
+                    null // Вимикаємо натискання, якщо будь-який епізод завантажується
+                    ? null
+                    : () async {
+                  // Встановлюємо номер епізоду, який завантажується, і оновлюємо UI
+                  setState(() {
+                    _loadingEpisodeNumber = episodeNumber;
+                  });
 
-                          // Викликаємо функцію для показу селектора стріму
-                          await showStreamSelectorFromModel(
-                            context,
-                            embedUrl,
-                            _showPlayOptions,
-                          );
+                  // Викликаємо функцію для показу селектора стріму
+                  await showStreamSelectorFromModel(
+                    context,
+                    embedUrl,
+                    _showPlayOptions,
+                  );
 
-                          // Після закриття модального вікна або вибору, скидаємо стан завантаження
-                          setState(() {
-                            _loadingEpisodeNumber = null;
-                          });
-                        },
+                  // Після закриття модального вікна або вибору, скидаємо стан завантаження
+                  setState(() {
+                    _loadingEpisodeNumber = null;
+                  });
+                },
               ),
             );
           },

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:http/http.dart' as http;
-import 'package:stream_flutter/models/VideoStreams.dart';
+import 'package:stream_flutter/models/video_streams.dart';
 import 'package:stream_flutter/models/online_media_details_entity.dart';
 import 'package:stream_flutter/models/search_result.dart';
 

@@ -6,22 +6,28 @@ import 'package:stream_flutter/providers/auth_provider.dart';
 import 'package:stream_flutter/providers/home_screen_provider.dart';
 import 'package:stream_flutter/providers/search_provider.dart';
 import 'package:stream_flutter/screens/home_screen.dart';
-import 'package:stream_flutter/screens/login_page.dart';
 import 'package:stream_flutter/screens/media_detail_screen.dart';
 import 'package:stream_flutter/screens/online_media_details_screen.dart';
 import 'package:stream_flutter/screens/search_screen.dart';
+import 'package:stream_flutter/screens/tmdb_media_details_screen.dart';
 import 'package:stream_flutter/services/media_service.dart';
 
+import 'models/tmdb_models.dart';
+
 GoRouter createRouter(AuthProvider authProvider) {
-  var loginR = GoRoute(path: '/login', builder: (context, state) => LoginScreen());
+  // var loginR = GoRoute(path: '/login', builder: (context, state) => LoginScreen());
   var homeR = GoRoute(
         path: '/',
         builder: (context, state) {
           return ChangeNotifierProvider(
             create:
-                (_) => HomeScreenProvider(
-                  mediaService: MediaService(authProvider.serverUrl, authProvider.userId, authProvider.authHeaders),
-                ),
+                (_) {
+                  final provider = HomeScreenProvider(
+                    mediaService: MediaService(authProvider.serverUrl, authProvider.userId, authProvider.authHeaders),
+                  );
+                  provider.initializeData();
+                  return provider;
+                },
             child: const HomeScreen(),
           );
         },
@@ -50,32 +56,27 @@ GoRouter createRouter(AuthProvider authProvider) {
               return OnlineMediaDetailScreen(path: path);
             },
       );
+  var mediaTmdbDetails = GoRoute(
+        path: '/media/tmdb/:type/:id',
+        builder:
+            (context, state) {
+              var type = MediaType.values.byName(state.pathParameters['type']!);
+              var id = int.parse(state.pathParameters['id']!);
+              return MediaDetailsScreen(tmdbId: id, type: type,);
+            },
+      );
 
   return GoRouter(
     refreshListenable: authProvider,
-    initialLocation: '/login',
+    initialLocation: '/',
     debugLogDiagnostics: true,
-    redirect: (context, state) {
-      final isLoginRoute = state.matchedLocation == '/login';
-
-      if (!authProvider.isInitialized) return null;
-
-      if (!authProvider.isAuthenticated && !isLoginRoute) {
-        return '/login';
-      }
-
-      if (authProvider.isAuthenticated && isLoginRoute) {
-        return '/';
-      }
-
-      return null;
-    },
     routes: [
-      loginR,
+      // loginR,
       homeR,
       mediaDetails,
       searchR,
-      mediaOnlineDetails
+      mediaOnlineDetails,
+      mediaTmdbDetails
     ],
   );
 }

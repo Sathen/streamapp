@@ -51,11 +51,11 @@ class MediaSection extends StatelessWidget {
   }
 
   Widget _buildMediaCard(BuildContext context, MediaItem item) {
-    final serverUrl = context.read<AuthProvider>().serverUrl;
-    final headers = context.read<AuthProvider>().authHeaders;
+    // final serverUrl = context.read<AuthProvider>().serverUrl;
+    // final headers = context.read<AuthProvider>().authHeaders;
 
     return GestureDetector(
-      onTap: () => context.push('/media/${item.id}'),
+      onTap: () => context.push('/media/tmdb/${item.type.name}/${item.id}'),
       child: Container(
         width: 120,
         margin: const EdgeInsets.all(8.0),
@@ -63,8 +63,7 @@ class MediaSection extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           image: DecorationImage(
             image: NetworkImage(
-              ImageUtils.getImageUrl(serverUrl, item.id),
-              headers: headers,
+              item.posterPath!,
             ),
             fit: BoxFit.cover,
           ),
