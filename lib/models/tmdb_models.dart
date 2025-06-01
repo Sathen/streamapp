@@ -4,6 +4,7 @@ abstract class TmdbMediaDetails {
   final int id;
   final String overview;
   final String title;
+  final String? originalTitle;
   final String? posterPath;
   final String? backdropPath;
   final double voteAverage;
@@ -15,6 +16,7 @@ abstract class TmdbMediaDetails {
     required this.id,
     required this.overview,
     required this.title,
+    this.originalTitle,
     this.posterPath,
     this.backdropPath,
     required this.voteAverage,
@@ -33,6 +35,7 @@ class TVDetails extends TmdbMediaDetails {
     required super.id,
     required super.overview,
     required super.title,
+    required super.originalTitle,
     super.posterPath,
     super.backdropPath,
     required this.firstAirDate,
@@ -47,7 +50,8 @@ class TVDetails extends TmdbMediaDetails {
   factory TVDetails.fromJson(Map<String, dynamic> json) {
     return TVDetails(
       id: json['id'],
-      title: json['name'] ?? json['original_name'],
+      title: json['name'],
+      originalTitle: json['original_name'],
       overview: json['overview'],
       posterPath: json['poster_path'],
       backdropPath: json['backdrop_path'],
@@ -171,6 +175,7 @@ class MovieDetails extends TmdbMediaDetails {
   MovieDetails({
     required super.id,
     required super.title,
+    required super.originalTitle,
     required super.overview,
     super.posterPath,
     super.backdropPath,
@@ -185,7 +190,8 @@ class MovieDetails extends TmdbMediaDetails {
   factory MovieDetails.fromJson(Map<String, dynamic> json) {
     return MovieDetails(
       id: json['id'],
-      title: json['title'],
+      title: json['title'] ?? json['original_title'] ?? '',
+      originalTitle: json['original_title'] ?? json['title'] ?? '',
       overview: json['overview'],
       posterPath: json['poster_path'],
       backdropPath: json['backdrop_path'],

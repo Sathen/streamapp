@@ -47,6 +47,24 @@ class OnlineServerApi {
     }
   }
 
+  Future<VideoStreams> getVideoSteams(String name, String? originalName, int season, int episode) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$HOST/online/film-streams?name=$name&original_name=$originalName&season=$season&episode=$episode"),
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        return VideoStreams.fromJson(json.decode(response.body));
+      } else {
+        log("Error response: ${response.statusCode}");
+        return VideoStreams();
+      }
+    } catch (e) {
+      log(e.toString());
+      return VideoStreams();
+    }
+  }
+
   Future<VideoStreams> getVideoStreams(String path) async {
     try {
       final response = await http.get(
