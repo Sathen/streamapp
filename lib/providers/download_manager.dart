@@ -1,76 +1,174 @@
-import 'dart:developer';
+import 'dart:developer' as developer;
 import 'dart:io';
+import 'dart:async'; // For Stopwatch
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../models/tmdb_models.dart'; // Ensure this import is correct
+
+class DownloadInfo {
+  double progress;
+  int downloadedBytes;
+  double speedBytesPerSecond;
+  String? totalSize; // Formatted string like "100 MB"
+  bool isCompleted;
+  DownloadInfo({
+    this.progress = 0.0,
+    this.downloadedBytes = 0,
+    this.speedBytesPerSecond = 0.0,
+    this.totalSize,
+    this.isCompleted = false,
+  });
+
+  String get formattedSpeed {
+    if (speedBytesPerSecond <= 0) return '0 KB/s';
+    if (speedBytesPerSecond < 1024) return '${speedBytesPerSecond.toStringAsFixed(1)} B/s';
+    if (speedBytesPerSecond < 1024 * 1024) return '${(speedBytesPerSecond / 1024).toStringAsFixed(1)} KB/s';
+    return '${(speedBytesPerSecond / (1024 * 1024)).toStringAsFixed(1)} MB/s';
+  }
+}
+
+
 class DownloadManager extends ChangeNotifier {
-  final Map<String, double> _progressMap = {}; // episodeKey -> progress
-  final Map<String, CancelToken> _cancelTokens =
-      {}; // episodeKey -> cancel token
+  final Map<String, DownloadInfo> _downloadInfoMap = {}; // episodeKey -> DownloadInfo
+  final Map<String, CancelToken> _cancelTokens = {}; // episodeKey -> cancel token
+  final Map<String, Stopwatch> _stopwatches = {}; // episodeKey -> stopwatch for speed calculation
+  final Map<String, int> _totalSegmentLengths = {}; // episodeKey -> sum of TS segment lengths in bytes
 
-  Map<String, double> get progressMap => Map.unmodifiable(_progressMap);
+  Map<String, DownloadInfo> get downloadInfoMap => Map.unmodifiable(_downloadInfoMap);
 
-  bool isDownloading(String episodeKey) => _progressMap.containsKey(episodeKey);
+  bool isDownloading(String episodeKey) => _downloadInfoMap.containsKey(episodeKey);
 
-  double getProgress(String episodeKey) => _progressMap[episodeKey] ?? 0.0;
+  DownloadInfo getDownloadInfo(String episodeKey) => _downloadInfoMap[episodeKey] ?? DownloadInfo();
 
   Future<void> downloadEpisode({
     required String episodeKey, // e.g. "movie_87234" or "tv_1253_s1e1"
     required String m3u8Url,
     required String fileName,
   }) async {
-    if (_progressMap.containsKey(episodeKey)) return; // already downloading
+    if (_downloadInfoMap.containsKey(episodeKey)) return; // already downloading
 
-    log("Start download with episode key: $episodeKey ");
+    developer.log("Start download with episode key: $episodeKey ");
 
     final cancelToken = CancelToken();
     _cancelTokens[episodeKey] = cancelToken;
-    _progressMap[episodeKey] = 0;
+
+    // Initialize download info and stopwatch
+    _downloadInfoMap[episodeKey] = DownloadInfo(progress: 0.0, downloadedBytes: 0, speedBytesPerSecond: 0.0);
+    _stopwatches[episodeKey] = Stopwatch()..start();
+    _totalSegmentLengths[episodeKey] = 0; // Reset for this download
     notifyListeners();
 
     try {
       final response = await Dio().get(m3u8Url);
       final lines = response.data.toString().split('\n');
       final tsUrls =
-          lines
-              .where((line) => line.trim().isNotEmpty && !line.startsWith('#'))
-              .map((line) => Uri.parse(m3u8Url).resolve(line).toString())
-              .toList();
+      lines
+          .where((line) => line.trim().isNotEmpty && !line.startsWith('#'))
+          .map((line) => Uri.parse(m3u8Url).resolve(line).toString())
+          .toList();
 
       final dir = await getApplicationDocumentsDirectory();
       final outputFile = File('${dir.path}/$fileName.ts');
       if (await outputFile.exists()) await outputFile.delete();
       final sink = outputFile.openWrite();
 
+      int currentDownloadedBytes = 0;
       for (int i = 0; i < tsUrls.length; i++) {
         final url = tsUrls[i];
-        final tsResp = await Dio().get(
-          url,
-          options: Options(responseType: ResponseType.bytes),
-          cancelToken: cancelToken,
-        );
-        sink.add(tsResp.data);
-        _progressMap[episodeKey] = (i + 1) / tsUrls.length;
-        notifyListeners();
+        try {
+          final tsResp = await Dio().get(
+            url,
+            options: Options(responseType: ResponseType.bytes),
+            cancelToken: cancelToken,
+          );
+
+          if (tsResp.data != null) {
+            final List<int> segmentBytes = tsResp.data as List<int>;
+            sink.add(segmentBytes);
+            currentDownloadedBytes += segmentBytes.length;
+
+            // Estimate total size by summing up segment lengths
+            _totalSegmentLengths[episodeKey] = (_totalSegmentLengths[episodeKey] ?? 0) + segmentBytes.length;
+
+            // Calculate progress, speed
+            final elapsedSeconds = _stopwatches[episodeKey]!.elapsedMilliseconds / 1000;
+            final speed = elapsedSeconds > 0 ? currentDownloadedBytes / elapsedSeconds : 0.0;
+            final progress = (i + 1) / tsUrls.length;
+
+            // Update DownloadInfo
+            _downloadInfoMap[episodeKey] = DownloadInfo(
+              progress: progress,
+              downloadedBytes: currentDownloadedBytes,
+              speedBytesPerSecond: speed,
+              totalSize: _formatBytes(_totalSegmentLengths[episodeKey]!), // Format total size
+            );
+            notifyListeners();
+          }
+        } on DioException catch (e) {
+          if (e.type == DioExceptionType.cancel) {
+            developer.log('Download for $episodeKey cancelled at segment \$i');
+            break; // Exit loop if cancelled
+          }
+          debugPrint('Failed to download segment $i for $episodeKey: \$e');
+          // Decide whether to continue or break on segment failure
+          continue; // Try next segment
+        } catch (e) {
+          debugPrint('Error downloading segment $i for $episodeKey: $e');
+          continue;
+        }
       }
 
       await sink.flush();
       await sink.close();
+
+      // Final update for completion
+      _downloadInfoMap[episodeKey]?.isCompleted = true; // Mark as completed
+      notifyListeners();
+      developer.log('Download completed for $episodeKey');
+
     } catch (e) {
-      debugPrint('Download failed for \$episodeKey: \$e');
+      if (e is DioException && e.type == DioExceptionType.cancel) {
+        developer.log('Download for $episodeKey was cancelled.');
+      } else {
+        debugPrint('Download failed for $episodeKey: $e');
+      }
     } finally {
-      _progressMap.remove(episodeKey);
+      _stopwatches[episodeKey]?.stop();
+      _downloadInfoMap.remove(episodeKey); // Remove after completion or cancellation
       _cancelTokens.remove(episodeKey);
+      _stopwatches.remove(episodeKey);
+      _totalSegmentLengths.remove(episodeKey);
       notifyListeners();
     }
   }
 
   void cancelDownload(String episodeKey) {
     _cancelTokens[episodeKey]?.cancel();
-    _progressMap.remove(episodeKey);
-    _cancelTokens.remove(episodeKey);
-    notifyListeners();
+    // The finally block in downloadEpisode will handle removal from maps and notifyListeners
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes <= 0) return '0 B';
+    const suffixes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    var i = (log(bytes) / log(1024)).floor();
+    return '${(bytes / pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
   }
 }
+
+
+String generateTvEpisodeKey(
+    String tmdbId,
+    TVSeasonDetails season,
+    TVEpisode episode,
+    ) => 'tv_${tmdbId}_s${season.seasonNumber}e${episode.episodeNumber}';
+
+String generateEpisodeKey(
+    String id, String seasonNumber, String episodeNumber
+    ) =>
+    'tv_${id}_s$seasonNumber.e$episodeNumber'; // Note: your existing `generateEpisodeKey` used `.` instead of `e`
+
+String generateMovieKey(String tmdbId) => 'movie_$tmdbId';

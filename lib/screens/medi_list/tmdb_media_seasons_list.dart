@@ -41,7 +41,7 @@ class TVSeasonsList extends StatelessWidget {
     return GenericSeasonsList(
       seasonDetails: genericSeasons,
       theme: theme,
-      mediaId: tmdbId,
+      mediaId: tmdbId.toString(),
       isFetching: isFetching,
       loadingEpisode: genericLoadingEpisode,
       mediaData: genericMediaData,

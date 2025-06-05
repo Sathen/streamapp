@@ -7,7 +7,7 @@ import '../../models/generic_media_details.dart';
 class GenericSeasonsList extends StatelessWidget {
   final List<GenericSeason> seasonDetails;
   final ThemeData theme;
-  final int? mediaId;
+  final String? mediaId;
   final bool isFetching;
   final GenericEpisode? loadingEpisode;
   final GenericMediaData? mediaData;

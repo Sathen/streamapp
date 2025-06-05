@@ -24,12 +24,14 @@ class PlayOptionsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context); // Get the current theme
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2C),
+        color: colorScheme.surface, // Use theme's surface color
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -39,14 +41,14 @@ class PlayOptionsDialog extends StatelessWidget {
           Text(
             'Play: $contentTitle',
             style: textTheme.titleLarge?.copyWith(
-              color: Colors.white,
+              color: colorScheme.onSurface, // Use theme's onSurface color
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 12),
           Text(
             'Stream: $streamName\nQuality selected. Play now?',
-            style: textTheme.bodyMedium?.copyWith(color: Colors.white70),
+            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)), // Adjust opacity for lighter text
           ),
           const SizedBox(height: 24),
           Row(
@@ -75,7 +77,14 @@ class PlayOptionsDialog extends StatelessWidget {
                     data: streamUrl,
                     type: 'video/*',
                   );
-                  await intent.launch();
+                  if (Platform.isAndroid) { // Only attempt AndroidIntent on Android
+                    await intent.launch();
+                  } else {
+                    // Fallback or error for other platforms if needed
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('External playback is only supported on Android.')),
+                    );
+                  }
                 },
               ),
               _ActionButton(
@@ -87,6 +96,10 @@ class PlayOptionsDialog extends StatelessWidget {
                     episodeKey: episodeKey,
                     m3u8Url: streamUrl,
                     fileName: fileName,
+                  );
+                  // Optionally, add a snackbar here to confirm download started
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Download started for $fileName')),
                   );
                 },
               ),
@@ -116,16 +129,20 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final iconTheme = theme.iconTheme;
+
     return Column(
       children: [
         IconButton(
-          icon: Icon(icon, color: Colors.white),
+          icon: Icon(icon, color: iconTheme.color), // Use theme's icon color
           iconSize: 32,
           onPressed: onTap,
         ),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70),
+          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)), // Use theme's text style and color
         ),
       ],
     );

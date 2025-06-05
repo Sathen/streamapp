@@ -86,7 +86,7 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
     final links = selectedTranslator!.links;
     return [
       Text(
-        "🎞 Якість (Переклад: \${selectedTranslator!.name})",
+        "🎞 Якість (Переклад: ${selectedTranslator!.name})",
         style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),

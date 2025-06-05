@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:stream_flutter/screens/play_options_dialog.dart';
 import 'package:stream_flutter/screens/production_cast_section.dart';
 import 'package:stream_flutter/screens/stream_selector_modal.dart';
-import 'package:stream_flutter/screens/medi_list/tv_seasons.dart';
+import 'package:stream_flutter/screens/medi_list/tmdb_media_seasons_list.dart';
 import 'package:stream_flutter/services/media_service.dart';
 
 import '../client/online_server_api.dart';
@@ -95,7 +95,7 @@ class _MediaDetailsScreenState extends State<MediaDetailsScreen> {
           if (widget.type == MediaType.movie)
             SliverToBoxAdapter(
               child: MoviePlayButton(
-                episodeKey: 'movie_${widget.tmdbId}',
+                episodeKey: generateMovieKey(widget.tmdbId.toString()),
                 theme: theme,
                 onPlayPressed: () {
                   if (_mediaData != null) {
@@ -175,7 +175,7 @@ class _MediaDetailsScreenState extends State<MediaDetailsScreen> {
                   streamUrl: url,
                   streamName: originalTitle!,
                   contentTitle: title,
-                  episodeKey: 'movie_${widget.tmdbId}',
+                  episodeKey: generateMovieKey(widget.tmdbId.toString()),
                   fileName: 'Movie_${widget.tmdbId}',
                 );
               },
@@ -231,7 +231,7 @@ class _MediaDetailsScreenState extends State<MediaDetailsScreen> {
                   streamName: name,
                   contentTitle: seriesTitle,
                   episodeKey:
-                      'tv_${widget.tmdbId}_s${season.seasonNumber}e${episode.episodeNumber}',
+                      generateEpisodeKey(_mediaData!.id.toString(), season.seasonNumber.toString(), episode.episodeNumber.toString()),
                   fileName:
                       '${seriesTitle.replaceAll(" ", "_")}_S${season.seasonNumber}E${episode.episodeNumber}',
                 );
@@ -253,31 +253,5 @@ class _MediaDetailsScreenState extends State<MediaDetailsScreen> {
         });
       }
     }
-  }
-
-  Widget buildTrailing(BuildContext context, String episodeKey) {
-    final manager = context.watch<DownloadManager>();
-    final downloading = manager.isDownloading(episodeKey);
-    final progress = manager.getProgress(episodeKey);
-    log(
-      "buildTrailing: Episode key: $episodeKey progress: $progress isDownloading: $downloading",
-    );
-
-    return downloading
-        ? Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 32,
-              height: 32,
-              child: CircularProgressIndicator(value: progress),
-            ),
-            Text(
-              '${(progress * 100).toStringAsFixed(0)}%',
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-          ],
-        )
-        : const Icon(Icons.play_arrow);
   }
 }

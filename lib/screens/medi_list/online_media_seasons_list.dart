@@ -43,7 +43,7 @@ class OnlineMediaSeasonsList extends StatelessWidget {
     return GenericSeasonsList(
       seasonDetails: genericSeasons,
       theme: theme,
-      mediaId: null,
+      mediaId: mediaDetails.title,
       // No specific TMDB ID for online media, pass null
       isFetching: isFetching,
       loadingEpisode: genericLoadingEpisode,

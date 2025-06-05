@@ -6,6 +6,7 @@ import 'package:stream_flutter/models/video_streams.dart';
 import 'package:stream_flutter/screens/play_options_dialog.dart';
 import 'package:stream_flutter/screens/widgets/header.dart';
 
+import '../providers/download_manager.dart';
 import 'medi_list/online_media_seasons_list.dart';
 import 'media_header_section.dart';
 
@@ -88,7 +89,7 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
                   streamUrl: url,
                   streamName: '',
                   contentTitle: contentTitle ?? mediaDetails.title,
-                  episodeKey: 'online_tv_${mediaDetails.title}_s${season.seasonNumber}.e${episode.episodeNumber}',
+                  episodeKey: generateEpisodeKey(mediaDetails.title, season.seasonNumber.toString(), episode.episodeNumber.toString()),
                   fileName: '${mediaDetails.title.replaceAll(" ", "_")}_S${season.seasonNumber}.E${episode.episodeNumber}',
                 ),
               );

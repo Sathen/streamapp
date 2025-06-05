@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:stream_flutter/providers/auth_provider.dart';
+
 import '../../models/media_item.dart';
-import '../../util/image_util.dart';
 
 class MediaSection extends StatelessWidget {
   final String title;
   final List<MediaItem> items;
-  final bool showProgress;
 
   const MediaSection({
     super.key,
     required this.title,
     required this.items,
-    this.showProgress = false,
   });
 
   @override
@@ -29,10 +25,6 @@ class MediaSection extends StatelessWidget {
               children: [
                 Text(title, style: Theme.of(context).textTheme.titleLarge),
                 const Spacer(),
-                TextButton(
-                  onPressed: () => context.push('/library/$title'),
-                  child: const Text('See All'),
-                ),
               ],
             ),
           ),
@@ -71,14 +63,6 @@ class MediaSection extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (showProgress)
-              LinearProgressIndicator(
-                value: item.progress?.toDouble() ?? 0.0,
-                backgroundColor: Colors.black26,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Theme.of(context).colorScheme.secondary,
-                ),
-              ),
             Container(
               padding: const EdgeInsets.all(4),
               width: double.infinity,
