@@ -1,12 +1,18 @@
 import 'dart:convert';
 
-class OnlineMediaDetailsEntity {
+import 'generic_media_details.dart';
+
+class OnlineMediaDetailsEntity implements GenericMediaData {
+  // Implement GenericMediaData
+  @override
   late String title;
   late String description;
   late List<String> cast = [];
   late String year;
   late double rating;
+  @override
   late String posterPath;
+  @override
   late String backdropPath;
   late String? embedUrl;
   late List<OnlineMediaDetailsSeasons> seasons = [];
@@ -22,8 +28,16 @@ class OnlineMediaDetailsEntity {
     backdropPath = data["backdropPath"];
     embedUrl = data["embed_url"];
 
-    data["cast"].forEach((actor) => cast.add(actor));
-    data["seasons"]?.forEach((season) => seasons.add(OnlineMediaDetailsSeasons.fromJson(season)));
+    if (data["cast"] != null) {
+      // Added null check for safety
+      data["cast"].forEach((actor) => cast.add(actor));
+    }
+    if (data["seasons"] != null) {
+      // Added null check for safety
+      data["seasons"]?.forEach(
+        (season) => seasons.add(OnlineMediaDetailsSeasons.fromJson(season)),
+      );
+    }
   }
 
   @override
@@ -32,25 +46,72 @@ class OnlineMediaDetailsEntity {
   }
 }
 
-class OnlineMediaDetailsSeasons {
-  late String seasonNumber;
+class OnlineMediaDetailsEpisode implements GenericEpisode {
+  // Implement GenericEpisode
+  @override
+  late int episodeNumber;
+  @override
+  late String name;
+  @override
+  late String airDate;
+  @override
+  late String stillPath;
+  @override
+  late String embedUrl;
+
+  OnlineMediaDetailsEpisode();
+
+  OnlineMediaDetailsEpisode.fromJson(Map<String, dynamic> data) {
+    episodeNumber = data["episode_number"];
+    name = data["name"];
+    airDate = data["air_date"];
+    stillPath = data["still_path"];
+    embedUrl = data["embed_url"];
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+}
+
+class OnlineMediaDetailsSeasons implements GenericSeason {
+  // Implement GenericSeason
+  @override
+  late int seasonNumber;
+  @override
+  late String title;
   late String url;
+  @override
   late int numberOfEpisodes;
+  @override
   late Map<int, String> embedEpisodesUrls;
+  @override
+  late String posterPath;
+
+  @override
+  late List<OnlineMediaDetailsEpisode> episodes = [];
 
   OnlineMediaDetailsSeasons();
 
   OnlineMediaDetailsSeasons.fromJson(Map<String, dynamic> data) {
     seasonNumber = data["seasonNumber"];
+    title = data["name"];
     url = data["url"];
-    numberOfEpisodes = int.parse(data["numberOfEpisodes"]);
-    embedEpisodesUrls = (data["embed_episodes_urls"]as Map<String, dynamic>).map(
-          (key, value) => MapEntry(int.parse(key), value.toString()),
+    posterPath = data['poster_path'];
+    numberOfEpisodes = data["numberOfEpisodes"];
+
+    final embedMap = data["embed_episodes_urls"] as Map<String, dynamic>? ?? {};
+    embedEpisodesUrls = embedMap.map(
+      (key, value) => MapEntry(int.parse(key), value.toString()),
     );
+
+    if (data["episodes"] != null) {
+      episodes =
+          List.from(
+            data["episodes"],
+          ).map((ep) => OnlineMediaDetailsEpisode.fromJson(ep)).toList();
+    }
   }
 
   @override
-  String toString() {
-    return jsonEncode(this);
-  }
+  String toString() => jsonEncode(this);
 }

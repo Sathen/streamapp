@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:stream_flutter/providers/auth_provider.dart';
 import 'package:stream_flutter/providers/home_screen_provider.dart';
 import 'package:stream_flutter/providers/search_provider.dart';
+import 'package:stream_flutter/screens/downloads_screen.dart';
 import 'package:stream_flutter/screens/home_screen.dart';
 import 'package:stream_flutter/screens/media_detail_screen.dart';
 import 'package:stream_flutter/screens/online_media_details_screen.dart';
@@ -56,6 +57,13 @@ GoRouter createRouter(AuthProvider authProvider) {
               return OnlineMediaDetailScreen(path: path);
             },
       );
+  var downloadsScreen = GoRoute(
+        path: '/downloads',
+        builder:
+            (context, state) {
+              return DownloadsScreen();
+            },
+      );
   var mediaTmdbDetails = GoRoute(
         path: '/media/tmdb/:type/:id',
         builder:
@@ -76,7 +84,8 @@ GoRouter createRouter(AuthProvider authProvider) {
       mediaDetails,
       searchR,
       mediaOnlineDetails,
-      mediaTmdbDetails
+      mediaTmdbDetails,
+      downloadsScreen
     ],
   );
 }

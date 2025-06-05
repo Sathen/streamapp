@@ -1,11 +1,20 @@
+// lib/models/tmdb_models.dart
+import 'package:flutter/material.dart';
+
+import 'generic_media_details.dart'; // Often needed for @required or similar annotations
+
 enum MediaType { movie, tv, unknown }
 
-abstract class TmdbMediaDetails {
+// TmdbMediaDetails now implements GenericMediaData
+abstract class TmdbMediaDetails implements GenericMediaData {
   final int id;
   final String overview;
+  @override
   final String title;
   final String? originalTitle;
+  @override
   final String? posterPath;
+  @override
   final String? backdropPath;
   final double voteAverage;
   final int voteCount;
@@ -26,10 +35,11 @@ abstract class TmdbMediaDetails {
   });
 }
 
+// TVDetails extends TmdbMediaDetails, so it also implements GenericMediaData
 class TVDetails extends TmdbMediaDetails {
   final String firstAirDate;
   final List<String> episodeRunTime;
-  final List<TVSeasonSummary> seasons;
+  final List<TVSeasonSummary> seasons; // This is a summary, not full details
 
   TVDetails({
     required super.id,
@@ -68,9 +78,10 @@ class TVDetails extends TmdbMediaDetails {
           (json['production_companies'] as List)
               .map((company) => ProductionCompany.fromJson(company))
               .toList(),
-      seasons: (json['seasons'] as List? ?? [])
-          .map((season) => TVSeasonSummary.fromJson(season))
-          .toList(),
+      seasons:
+          (json['seasons'] as List? ?? [])
+              .map((season) => TVSeasonSummary.fromJson(season))
+              .toList(),
     );
   }
 }
@@ -107,11 +118,16 @@ class TVSeasonSummary {
   }
 }
 
-class TVEpisode {
+// TVEpisode now implements GenericEpisode
+class TVEpisode implements GenericEpisode {
+  @override
   final int episodeNumber;
+  @override
   final String name;
   final String overview;
+  @override
   final String? stillPath;
+  @override
   final String airDate;
   final double voteAverage;
 
@@ -126,7 +142,7 @@ class TVEpisode {
 
   factory TVEpisode.fromJson(Map<String, dynamic> json) {
     return TVEpisode(
-      episodeNumber: json['episode_number'],
+      episodeNumber: (json['episode_number'] as num).toInt(),
       name: json['name'],
       overview: json['overview'],
       stillPath: json['still_path'],
@@ -134,14 +150,21 @@ class TVEpisode {
       voteAverage: (json['vote_average'] as num).toDouble(),
     );
   }
+
+  @override
+  String? get embedUrl => null;
 }
 
-class TVSeasonDetails {
+// TVSeasonDetails now implements GenericSeason
+class TVSeasonDetails implements GenericSeason {
+  @override
   final int seasonNumber;
   final String name;
   final String overview;
+  @override
   final String? posterPath;
   final String airDate;
+  @override
   final List<TVEpisode> episodes;
 
   TVSeasonDetails({
@@ -166,6 +189,15 @@ class TVSeasonDetails {
               .toList(),
     );
   }
+
+  @override
+  Map<int, String>? get embedEpisodesUrls => null;
+
+  @override
+  int get numberOfEpisodes => episodes.length;
+
+  @override
+  String get title => name;
 }
 
 class MovieDetails extends TmdbMediaDetails {

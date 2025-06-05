@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/providers/download_manager.dart';
 import 'package:stream_flutter/routes.dart';
 
 import 'client/auth_jellyfin_server.dart';
@@ -27,6 +28,9 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
+        ChangeNotifierProvider<DownloadManager>(
+          create: (_) => DownloadManager(),
+        ),
       ],
       child: Builder(
         builder: (context) {

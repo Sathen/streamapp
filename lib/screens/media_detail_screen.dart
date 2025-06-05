@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:stream_flutter/client/jellyfin_serials_api.dart';
 import 'package:stream_flutter/models/series_models.dart';
-import 'package:stream_flutter/screens/widgets/actions.dart';
 import 'package:stream_flutter/screens/widgets/cast_sections.dart';
 import 'package:stream_flutter/screens/widgets/episodes.dart';
 import 'package:stream_flutter/screens/widgets/header.dart';
@@ -91,8 +90,6 @@ class _JellyfinMediaDetailScreenState extends State<JellyfinMediaDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TitleSection(mediaDetail: _mediaDetail!),
-                const SizedBox(height: 16),
-                ActionsSection(mediaDetail: _mediaDetail!),
                 const SizedBox(height: 16),
                 _buildOverviewSection(),
                 const SizedBox(height: 16),

@@ -77,10 +77,14 @@ class HomeScreen extends StatelessWidget {
         if (index == 1) {
           context.push('/search');
         }
+        if (index == 2) {
+          context.push('/downloads');
+        }
       },
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+        BottomNavigationBarItem(icon: Icon(Icons.download), label: 'Downloads'),
       ],
     );
   }

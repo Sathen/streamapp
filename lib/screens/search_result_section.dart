@@ -12,18 +12,17 @@ class SearchResultSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const double minCardWidth = 120.0; // Можете налаштувати це значення
     const double spacing = 12.0;
 
-    int crossAxisCount = (screenWidth / (minCardWidth + spacing)).floor();
+    // Calculate optimal card width based on screen size
+    double targetCardWidth = screenWidth < 600
+        ? 120
+        : screenWidth < 900
+        ? 140
+        : 160;
 
-    if (crossAxisCount < 2) {
-      crossAxisCount = 2;
-    }
-
-    if (crossAxisCount > 6) {
-      crossAxisCount = 6;
-    }
+    int crossAxisCount = (screenWidth / (targetCardWidth + spacing)).floor();
+    crossAxisCount = crossAxisCount.clamp(2, 6);
 
     return GridView.builder(
       padding: const EdgeInsets.all(12),
@@ -45,15 +44,13 @@ class SearchResultSection extends StatelessWidget {
 
   Widget _buildMediaCard(BuildContext context, SearchItem item) {
     return GestureDetector(
-      onTap:
-          () => context.push(
-            '/media/online/${Base64Encoder.urlSafe().convert(item.path!.codeUnits)}',
-          ),
+      onTap: () => context.push(
+        '/media/online/${Base64Encoder.urlSafe().convert(item.path!.codeUnits)}',
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Stack(
           children: [
-            // Image with spinner and fallback
             SizedBox(
               width: double.infinity,
               height: double.infinity,
@@ -66,22 +63,17 @@ class SearchResultSection extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   );
                 },
-                errorBuilder:
-                    (context, error, _) => const Center(
-                      child: Icon(
-                        Icons.broken_image,
-                        size: 40,
-                        color: Colors.white54,
-                      ),
-                    ),
+                errorBuilder: (context, error, _) => const Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    size: 40,
+                    color: Colors.white54,
+                  ),
+                ),
               ),
             ),
-
-            // Title overlay
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
+            Align(
+              alignment: Alignment.bottomCenter,
               child: Container(
                 color: Colors.black.withOpacity(0.5),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
