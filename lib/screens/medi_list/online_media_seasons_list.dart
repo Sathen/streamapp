@@ -1,28 +1,26 @@
 // lib/screens/widgets/online_media_seasons_list.dart
 import 'package:flutter/material.dart';
-import 'package:stream_flutter/models/online_media_details_entity.dart';
-
-import '../../models/generic_media_details.dart';
-import 'generic_season_list.dart';
+import 'package:stream_flutter/models/online_media_details_entity.dart'; // Your specific Online Media models
+import 'package:stream_flutter/screens/medi_list/season_episode_switcher.dart';
+import '../../models/generic_media_details.dart'; // Your generic models
 
 class OnlineMediaSeasonsList extends StatelessWidget {
   final OnlineMediaDetailsEntity mediaDetails;
-  final ThemeData theme;
-  final bool isFetching;
+
+  // final ThemeData theme; // Theme will be picked up by SeasonEpisodeSwitcher from context
+  // final bool isFetching; // loadingEpisode on SeasonEpisodeSwitcher handles specific episode loading
   final OnlineMediaDetailsEpisode? loadingEpisode;
   final void Function(
-    OnlineMediaDetailsSeasons,
-    OnlineMediaDetailsEpisode,
-    String?,
-    String?,
+    OnlineMediaDetailsSeasons season,
+    OnlineMediaDetailsEpisode episode,
+    String? embedUrl,
+    String? contentTitle,
   )
   onEpisodeTap;
 
   const OnlineMediaSeasonsList({
     super.key,
     required this.mediaDetails,
-    required this.theme,
-    required this.isFetching,
     required this.loadingEpisode,
     required this.onEpisodeTap,
   });
@@ -31,37 +29,59 @@ class OnlineMediaSeasonsList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (mediaDetails.seasons.isEmpty) {
       return const SliverToBoxAdapter(
-        child: Center(child: Text("No seasons available.")),
+        // Correct for CustomScrollView context
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text("No seasons available."),
+          ),
+        ),
       );
     }
 
-    final List<GenericSeason> genericSeasons =
-        mediaDetails.seasons.cast<GenericSeason>();
-    final GenericEpisode? genericLoadingEpisode = loadingEpisode;
-    final GenericMediaData genericMediaData = mediaDetails;
+    // Cast to the generic types that SeasonEpisodeSwitcher expects.
+    // This assumes OnlineMediaDetailsSeasons implements/extends GenericSeason, etc.
+    final List<OnlineMediaDetailsSeasons> genericSeasons =
+        mediaDetails.seasons.cast<OnlineMediaDetailsSeasons>().toList();
+    final GenericEpisode? genericLoadingEpisode = loadingEpisode; // Direct cast
+    final OnlineMediaDetailsEntity genericMediaData = mediaDetails; // Direct cast
 
-    return GenericSeasonsList(
-      seasonDetails: genericSeasons,
-      theme: theme,
-      mediaId: mediaDetails.title,
-      // No specific TMDB ID for online media, pass null
-      isFetching: isFetching,
-      loadingEpisode: genericLoadingEpisode,
-      mediaData: genericMediaData,
-      onEpisodeTap: (
-        GenericSeason season,
-        GenericEpisode episode,
-        String? embedUrl,
-        String? contentTitle,
-      ) {
-        // Cast back to original types for your specific callback
-        onEpisodeTap(
-          season as OnlineMediaDetailsSeasons,
-          episode as OnlineMediaDetailsEpisode,
-          embedUrl,
-          contentTitle,
-        );
-      },
+    // For mediaId, SeasonEpisodeSwitcher uses it for generating unique keys.
+    // Using title might be okay if it's unique enough, or if your OnlineMediaDetailsEntity
+    // has a more specific ID field, that would be better.
+    // The original code used mediaDetails.title.
+    final String mediaIdForSwitcher =
+        mediaDetails.title.replaceAll(' ', '_');
+
+    return SliverToBoxAdapter(
+      // SeasonEpisodeSwitcher is a Column, so wrap it for use in slivers
+      child: SeasonEpisodeSwitcher(
+        allSeasons: genericSeasons,
+        mediaId: mediaIdForSwitcher,
+        mediaData: genericMediaData,
+        loadingEpisode: genericLoadingEpisode,
+        onEpisodeTap: (
+          GenericSeason season,
+          GenericEpisode episode,
+          String? embedUrl,
+          String? contentTitle,
+        ) {
+          if (season is OnlineMediaDetailsSeasons &&
+              episode is OnlineMediaDetailsEpisode) {
+            onEpisodeTap(
+              season, // Now correctly typed as OnlineMediaDetailsSeasons
+              episode, // Now correctly typed as OnlineMediaDetailsEpisode
+              embedUrl,
+              contentTitle,
+            );
+          } else {
+            // Handle error: The types received are not what was expected.
+            debugPrint(
+              "Error: Could not cast GenericSeason/GenericEpisode back to Online Media specific types in OnlineMediaSeasonsList.",
+            );
+          }
+        },
+      ),
     );
   }
 }

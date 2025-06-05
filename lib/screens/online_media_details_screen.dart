@@ -72,8 +72,6 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
         ),
         OnlineMediaSeasonsList(
           mediaDetails: mediaDetails,
-          theme: Theme.of(context),
-          isFetching: _isLoading,
           loadingEpisode: _loadingEpisode,
           onEpisodeTap: (season, episode, embedUrl, contentTitle) async {
             setState(() {

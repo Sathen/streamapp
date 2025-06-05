@@ -107,29 +107,15 @@ class _MediaDetailsScreenState extends State<MediaDetailsScreen> {
                 },
               ),
             ),
-          if (widget.type == MediaType.tv &&
-              seasonDetails != null &&
-              seasonDetails!.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Seasons',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
           if (widget.type == MediaType.tv && seasonDetails != null)
-            TVSeasonsList(
-              seasonDetails: seasonDetails!,
-              theme: theme,
-              tmdbId: widget.tmdbId,
-              isFetching: _isFetchingStreams,
-              loadingEpisode: _loadingTappedEpisode,
-              mediaData: _mediaData,
-              onEpisodeTap: _fetchAndShowStreamsForTVEpisode,
+            SliverToBoxAdapter(
+              child: TVSeasonsList(
+                seasonDetails: seasonDetails!,
+                tmdbId: widget.tmdbId,
+                loadingEpisode: _loadingTappedEpisode,
+                mediaData: _mediaData,
+                onEpisodeTap: _fetchAndShowStreamsForTVEpisode,
+              ),
             ),
           if (_mediaData?.productionCompanies != null &&
               _mediaData!.productionCompanies.isNotEmpty)
