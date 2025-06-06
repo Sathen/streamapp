@@ -17,7 +17,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // State variable to keep track of the selected category
-  DisplayCategory _selectedCategory = DisplayCategory.movies; // Default to movies
+  DisplayCategory _selectedCategory =
+      DisplayCategory.movies; // Default to movies
 
   @override
   Widget build(BuildContext context) {
@@ -39,17 +40,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      title: const Text('Streamyfin'),
-      elevation: 1.0, // UI Improvement: Subtle AppBar elevation
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: () => context.push('/search'),
-        )
-      ],
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       // Add the SegmentedButton as the bottom part of the AppBar
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight), // Standard height for AppBar bottom
+        preferredSize: const Size.fromHeight(
+          TextSelectionToolbar.kToolbarContentDistanceBelow,
+        ),
+        // Standard height for AppBar bottom
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: SegmentedButton<DisplayCategory>(
@@ -74,9 +72,18 @@ class _HomeScreenState extends State<HomeScreen> {
             style: SegmentedButton.styleFrom(
               // UI Improvement: Customized SegmentedButton style
               backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
-              foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant, // Text color for unselected
-              selectedForegroundColor: Theme.of(context).colorScheme.onPrimary, // Text color for selected
-              selectedBackgroundColor: Theme.of(context).colorScheme.primary, // Background for selected
+              foregroundColor:
+                  Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant, // Text color for unselected
+              selectedForegroundColor:
+                  Theme.of(
+                    context,
+                  ).colorScheme.onPrimary, // Text color for selected
+              selectedBackgroundColor:
+                  Theme.of(
+                    context,
+                  ).colorScheme.primary, // Background for selected
               // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // Optional: more rounded
             ),
           ),
@@ -103,7 +110,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  List<Widget> _getSliversForCategory(HomeScreenProvider provider, DisplayCategory category) {
+  List<Widget> _getSliversForCategory(
+    HomeScreenProvider provider,
+    DisplayCategory category,
+  ) {
     if (category == DisplayCategory.movies) {
       return [
         if (provider.nowPlayingMovies.isNotEmpty)
@@ -112,9 +122,15 @@ class _HomeScreenState extends State<HomeScreen> {
             items: provider.nowPlayingMovies,
           ),
         if (provider.popularMovies.isNotEmpty)
-          MediaSection(title: '🔥 Popular Movies', items: provider.popularMovies),
+          MediaSection(
+            title: '🔥 Popular Movies',
+            items: provider.popularMovies,
+          ),
         if (provider.topRatedMovies.isNotEmpty)
-          MediaSection(title: '⭐ Top Rated Movies', items: provider.topRatedMovies),
+          MediaSection(
+            title: '⭐ Top Rated Movies',
+            items: provider.topRatedMovies,
+          ),
         if (provider.newestMovies.isNotEmpty)
           MediaSection(title: '🆕 Newest Movies', items: provider.newestMovies),
       ];
@@ -134,14 +150,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return [];
   }
 
-
   Widget _buildBottomNavigationBar(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: 0,
       backgroundColor: Theme.of(context).colorScheme.surface,
       selectedItemColor: Theme.of(context).colorScheme.secondary,
       // UI Improvement: Consistent unselected item color
-      unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+      unselectedItemColor: Theme.of(
+        context,
+      ).colorScheme.onSurface.withOpacity(0.7),
       type: BottomNavigationBarType.fixed,
       onTap: (index) {
         if (index == 0) {

@@ -24,14 +24,14 @@ class PlayOptionsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context); // Get the current theme
+    final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colorScheme.surface, // Use theme's surface color
+        color: colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -41,14 +41,16 @@ class PlayOptionsDialog extends StatelessWidget {
           Text(
             'Play: $contentTitle',
             style: textTheme.titleLarge?.copyWith(
-              color: colorScheme.onSurface, // Use theme's onSurface color
+              color: colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 12),
           Text(
             'Stream: $streamName\nQuality selected. Play now?',
-            style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)), // Adjust opacity for lighter text
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.7),
+            ),
           ),
           const SizedBox(height: 24),
           Row(
@@ -72,17 +74,19 @@ class PlayOptionsDialog extends StatelessWidget {
                 label: 'Play Externally',
                 onTap: () async {
                   Navigator.of(context).pop();
-                  final intent = AndroidIntent(
-                    action: 'action_view',
-                    data: streamUrl,
-                    type: 'video/*',
-                  );
-                  if (Platform.isAndroid) { // Only attempt AndroidIntent on Android
+                  if (Platform.isAndroid) {
+                    final intent = AndroidIntent(
+                      action: 'action_view',
+                      data: streamUrl,
+                      type: 'video/*',
+                    );
                     await intent.launch();
                   } else {
-                    // Fallback or error for other platforms if needed
+                    // For iOS/other platforms, you could use url_launcher
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('External playback is only supported on Android.')),
+                      const SnackBar(
+                        content: Text('External playback is only supported on Android.'),
+                      ),
                     );
                   }
                 },
@@ -90,18 +94,7 @@ class PlayOptionsDialog extends StatelessWidget {
               _ActionButton(
                 icon: Icons.download,
                 label: 'Download',
-                onTap: () {
-                  Navigator.of(context).pop();
-                  context.read<DownloadManager>().downloadEpisode(
-                    episodeKey: episodeKey,
-                    m3u8Url: streamUrl,
-                    fileName: fileName,
-                  );
-                  // Optionally, add a snackbar here to confirm download started
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Download started for $fileName')),
-                  );
-                },
+                onTap: () => _handleDownload(context),
               ),
               _ActionButton(
                 icon: Icons.close,
@@ -113,6 +106,40 @@ class PlayOptionsDialog extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Separate method to handle download with proper context management
+  void _handleDownload(BuildContext context) {
+    try {
+      // Get the DownloadManager before closing dialog
+      final downloadManager = context.read<DownloadManager>();
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+
+      // Start the download
+      downloadManager.downloadEpisode(
+        episodeKey: episodeKey,
+        m3u8Url: streamUrl,
+        fileName: fileName,
+      );
+
+      // Show success message
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('Download started for $fileName')),
+      );
+
+      // Close dialog after showing message
+      Navigator.of(context).pop();
+
+    } catch (e) {
+      // Handle any errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to start download: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 
@@ -136,13 +163,15 @@ class _ActionButton extends StatelessWidget {
     return Column(
       children: [
         IconButton(
-          icon: Icon(icon, color: iconTheme.color), // Use theme's icon color
+          icon: Icon(icon, color: iconTheme.color),
           iconSize: 32,
           onPressed: onTap,
         ),
         Text(
           label,
-          style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurface.withOpacity(0.7)), // Use theme's text style and color
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurface.withOpacity(0.7),
+          ),
         ),
       ],
     );

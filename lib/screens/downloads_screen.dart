@@ -91,14 +91,6 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.share),
-                title: const Text('Share'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _shareFile(file.path);
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
                 title: const Text(
                     'Delete', style: TextStyle(color: Colors.red)),
@@ -215,7 +207,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               file.path
                   .split('/')
                   .last,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(

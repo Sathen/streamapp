@@ -7,7 +7,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../models/tmdb_models.dart'; // Ensure this import is correct
 
 class DownloadInfo {
   double progress;
@@ -51,7 +50,8 @@ class DownloadManager extends ChangeNotifier {
   }) async {
     if (_downloadInfoMap.containsKey(episodeKey)) return; // already downloading
 
-    developer.log("Start download with episode key: $episodeKey ");
+    fileName = _sanitizeFileName(fileName);
+    developer.log("Start download with episode key: $episodeKey and fileName: $fileName ");
 
     final cancelToken = CancelToken();
     _cancelTokens[episodeKey] = cancelToken;
@@ -159,16 +159,28 @@ class DownloadManager extends ChangeNotifier {
   }
 }
 
+// Helper method to sanitize filename
+String _sanitizeFileName(String fileName) {
+  // Remove or replace invalid characters
+  String sanitized = fileName
+      .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_') // Replace invalid chars with underscore
+      .replaceAll(RegExp(r'\s+'), '_') // Replace multiple spaces with single underscore
+      .replaceAll(RegExp(r'_+'), '_') // Replace multiple underscores with single
+      .trim();
 
-String generateTvEpisodeKey(
-    String tmdbId,
-    TVSeasonDetails season,
-    TVEpisode episode,
-    ) => 'tv_${tmdbId}_s${season.seasonNumber}e${episode.episodeNumber}';
+  // Remove leading/trailing underscores
+  sanitized = sanitized.replaceAll(RegExp(r'^_+|_+$'), '');
+
+  // Ensure filename isn't empty and isn't too long
+  if (sanitized.isEmpty) sanitized = 'download';
+  if (sanitized.length > 200) sanitized = sanitized.substring(0, 200);
+
+  return sanitized;
+}
 
 String generateEpisodeKey(
     String id, String seasonNumber, String episodeNumber
     ) =>
-    'tv_${id}_s$seasonNumber.e$episodeNumber'; // Note: your existing `generateEpisodeKey` used `.` instead of `e`
+    'tv_${_sanitizeFileName(id)}_s$seasonNumber.e$episodeNumber'; // Note: your existing `generateEpisodeKey` used `.` instead of `e`
 
 String generateMovieKey(String tmdbId) => 'movie_$tmdbId';

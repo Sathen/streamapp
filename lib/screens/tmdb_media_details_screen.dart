@@ -97,6 +97,7 @@ class _MediaDetailsScreenState extends State<MediaDetailsScreen> {
               child: MoviePlayButton(
                 episodeKey: generateMovieKey(widget.tmdbId.toString()),
                 theme: theme,
+                isFetchingStreams: _isFetchingStreams,
                 onPlayPressed: () {
                   if (_mediaData != null) {
                     _fetchAndShowStreamsForMovie(

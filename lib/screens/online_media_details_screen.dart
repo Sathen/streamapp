@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:stream_flutter/client/online_server_api.dart';
 import 'package:stream_flutter/models/online_media_details_entity.dart';
 import 'package:stream_flutter/models/video_streams.dart';
+import 'package:stream_flutter/screens/movie_play_button.dart';
 import 'package:stream_flutter/screens/play_options_dialog.dart';
 import 'package:stream_flutter/screens/widgets/header.dart';
 
@@ -22,6 +23,7 @@ class OnlineMediaDetailScreen extends StatefulWidget {
 
 class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
   bool _isLoading = true;
+  bool _isFetchingStream = false;
   OnlineMediaDetailsEntity? _mediaDetails;
   final OnlineServerApi serverApi = OnlineServerApi();
   OnlineMediaDetailsEpisode? _loadingEpisode;
@@ -38,7 +40,8 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
-      body: _isLoading
+      body:
+      _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
           ? Center(
@@ -61,50 +64,88 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
     final mediaDetails = _mediaDetails!;
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(
-          child: _buildHeaderStack(mediaDetails),
-        ),
+        SliverToBoxAdapter(child: _buildHeaderStack(mediaDetails)),
         SliverPadding(
           padding: const EdgeInsets.all(16.0),
           sliver: SliverToBoxAdapter(
             child: MediaHeaderSection(mediaDetail: mediaDetails),
           ),
         ),
-        OnlineMediaSeasonsList(
-          mediaDetails: mediaDetails,
-          loadingEpisode: _loadingEpisode,
-          onEpisodeTap: (season, episode, embedUrl, contentTitle) async {
-            setState(() {
-              _loadingEpisode = episode;
-            });
-
-            try {
-              await showStreamSelectorFromModel(
-                context,
-                embedUrl!,
-                    (url) => showPlayOptionsDialog(
-                  context: context,
-                  streamUrl: url,
-                  streamName: '',
-                  contentTitle: contentTitle ?? mediaDetails.title,
-                  episodeKey: generateEpisodeKey(mediaDetails.title, season.seasonNumber.toString(), episode.episodeNumber.toString()),
-                  fileName: '${mediaDetails.title.replaceAll(" ", "_")}_S${season.seasonNumber}.E${episode.episodeNumber}',
+        if (mediaDetails.seasons.isEmpty)
+          SliverToBoxAdapter(
+            child: MoviePlayButton(
+              onPlayPressed:
+                  () =>
+              {
+                setState(() {
+                  _isFetchingStream = true;
+                }),
+                showStreamSelectorFromModel(
+                  context,
+                  mediaDetails.embedUrl!,
+                      (url) =>
+                      showPlayOptionsDialog(
+                        context: context,
+                        streamUrl: url,
+                        streamName: '',
+                        contentTitle: mediaDetails.title,
+                        episodeKey: generateMovieKey(mediaDetails.title),
+                        fileName: mediaDetails.title.replaceAll(" ", "_"),
+                      ),
                 ),
-              );
-            } catch (e) {
-              debugPrint('Error showing stream selector: $e');
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Failed to load streams. Please try again.')),
-                );
-              }
-            } finally {
+              },
+              episodeKey: generateMovieKey(mediaDetails.title),
+              theme: Theme.of(context),
+              isFetchingStreams: _isFetchingStream,
+            ),
+          ),
+        if (mediaDetails.seasons.isNotEmpty)
+          OnlineMediaSeasonsList(
+            mediaDetails: mediaDetails,
+            loadingEpisode: _loadingEpisode,
+            onEpisodeTap: (season, episode, embedUrl, contentTitle) async {
               setState(() {
-                _loadingEpisode = null;
+                _loadingEpisode = episode;
               });
-            }
-          },
-        ),
+
+              try {
+                await showStreamSelectorFromModel(
+                  context,
+                  embedUrl!,
+                      (url) =>
+                      showPlayOptionsDialog(
+                        context: context,
+                        streamUrl: url,
+                        streamName: '',
+                        contentTitle: contentTitle ?? mediaDetails.title,
+                        episodeKey: generateEpisodeKey(
+                          mediaDetails.title,
+                          season.seasonNumber.toString(),
+                          episode.episodeNumber.toString(),
+                        ),
+                        fileName:
+                        '${mediaDetails.title.replaceAll(" ", "_")}_S${season
+                            .seasonNumber}.E${episode.episodeNumber}',
+                      ),
+                );
+              } catch (e) {
+                debugPrint('Error showing stream selector: $e');
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Failed to load streams. Please try again.',
+                      ),
+                    ),
+                  );
+                }
+              } finally {
+                setState(() {
+                  _loadingEpisode = null;
+                });
+              }
+            },
+          ),
       ],
     );
   }
@@ -148,7 +189,10 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
         IconButton(
           icon: Icon(
             Icons.favorite,
-            color: Theme.of(context).colorScheme.secondary,
+            color: Theme
+                .of(context)
+                .colorScheme
+                .secondary,
           ),
           onPressed: () {
             // TODO: Implement favorite toggle
@@ -158,20 +202,23 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
     );
   }
 
-  Future<void> showStreamSelectorFromModel(
-      BuildContext context,
+  Future<void> showStreamSelectorFromModel(BuildContext context,
       String path,
-      void Function(String url) onQualitySelected,
-      ) async {
+      void Function(String url) onQualitySelected,) async {
     try {
       VideoStreams streams = await serverApi.getVideoStreams(path);
 
       if (!mounted) return;
+      setState(() {
+        _isFetchingStream = false;
+      });
 
       if (streams.streams.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No streams available for this episode.')),
+            const SnackBar(
+              content: Text('No streams available for this episode.'),
+            ),
           );
         }
         return;
@@ -205,7 +252,8 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
                         );
                       }),
                     ],
-                    if (selectedSource != null && selectedTranslator == null) ...[
+                    if (selectedSource != null &&
+                        selectedTranslator == null) ...[
                       const SizedBox(height: 16),
                       const Text(
                         "🗣 Перекладач",
@@ -215,7 +263,11 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
                       ...streams.streams[selectedSource]!.map((translator) {
                         return ListTile(
                           title: Text(translator.name),
-                          onTap: () => setState(() => selectedTranslator = translator),
+                          onTap:
+                              () =>
+                              setState(
+                                    () => selectedTranslator = translator,
+                              ),
                         );
                       }),
                     ],
@@ -247,7 +299,9 @@ class _OnlineMediaDetailScreenState extends State<OnlineMediaDetailScreen> {
       debugPrint('Error fetching video streams: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to fetch video streams. Please try again.')),
+          const SnackBar(
+            content: Text('Failed to fetch video streams. Please try again.'),
+          ),
         );
       }
     }

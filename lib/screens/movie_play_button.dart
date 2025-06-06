@@ -5,6 +5,7 @@ import '../../providers/download_manager.dart'; // Ensure this path is correct
 class MoviePlayButton extends StatelessWidget {
   final VoidCallback onPlayPressed;
   final String episodeKey;
+  final bool isFetchingStreams;
   final ThemeData theme;
 
   const MoviePlayButton({
@@ -12,6 +13,7 @@ class MoviePlayButton extends StatelessWidget {
     required this.onPlayPressed,
     required this.episodeKey,
     required this.theme,
+    required this.isFetchingStreams,
   });
 
   @override
@@ -25,7 +27,7 @@ class MoviePlayButton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ElevatedButton.icon(
-              icon: const Icon(Icons.play_arrow),
+              icon: isFetchingStreams ? CircularProgressIndicator() : const Icon(Icons.play_arrow),
               label: const Text('Play'),
 
               style: ElevatedButton.styleFrom(
