@@ -1,22 +1,18 @@
-import 'dart:developer';
-
+// lib/screens/media_details_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:stream_flutter/screens/play_options_dialog.dart';
 import 'package:stream_flutter/screens/production_cast_section.dart';
-import 'package:stream_flutter/screens/stream_selector_modal.dart';
 import 'package:stream_flutter/screens/medi_list/tmdb_media_seasons_list.dart';
 import 'package:stream_flutter/services/media_service.dart';
+import 'package:stream_flutter/providers/download_manager.dart';
 
-import '../client/online_server_api.dart';
 import '../models/tmdb_models.dart';
-import '../providers/download_manager.dart';
 import '../util/errors.dart';
+import 'base_media_screen.dart';
 import 'media_back_drop_appbar.dart';
 import 'media_header_section.dart';
 import 'movie_play_button.dart';
 
-class MediaDetailsScreen extends StatefulWidget {
+class MediaDetailsScreen extends BaseMediaDetailScreen {
   final int tmdbId;
   final MediaType type;
 
@@ -30,212 +26,159 @@ class MediaDetailsScreen extends StatefulWidget {
   State<MediaDetailsScreen> createState() => _MediaDetailsScreenState();
 }
 
-class _MediaDetailsScreenState extends State<MediaDetailsScreen> {
+class _MediaDetailsScreenState
+    extends BaseMediaDetailScreenState<MediaDetailsScreen> {
   final tmdbService = MediaService(null, null, null);
-  final onlineServerApi = OnlineServerApi();
-  bool isLoading = true;
-  bool _isFetchingStreams = false;
+  TmdbMediaDetails? _mediaData;
+  List<TVSeasonDetails>? _seasonDetails;
   TVEpisode? _loadingTappedEpisode;
 
-  TmdbMediaDetails? _mediaData;
-  List<TVSeasonDetails>? seasonDetails;
-
   @override
-  void initState() {
-    super.initState();
-    _loadData();
+  Future<void> loadData() async {
+    setLoadingState(true);
+
+    try {
+      _mediaData = null;
+      _seasonDetails = null;
+
+      if (widget.type == MediaType.movie) {
+        _mediaData = await tmdbService.fetchMovieDetails(widget.tmdbId);
+      } else if (widget.type == MediaType.tv) {
+        final tvSpecificDetails = await tmdbService.fetchTVDetails(
+          widget.tmdbId,
+        );
+        _mediaData = tvSpecificDetails;
+        _seasonDetails = await Future.wait(
+          tvSpecificDetails.seasons.map(
+            (s) =>
+                tmdbService.fetchTVSeasonDetails(widget.tmdbId, s.seasonNumber),
+          ),
+        );
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        errorMessage = null;
+      });
+    } catch (e) {
+      handleError(e, 'Failed to load media details. Please try again.');
+    }
   }
 
-  Future<void> _loadData() async {
-    setState(() => isLoading = true);
-    _mediaData = null;
-    seasonDetails = null;
 
-    if (widget.type == MediaType.movie) {
-      _mediaData = await tmdbService.fetchMovieDetails(widget.tmdbId);
-    } else if (widget.type == MediaType.tv) {
-      final tvSpecificDetails = await tmdbService.fetchTVDetails(widget.tmdbId);
-      _mediaData = tvSpecificDetails;
-      seasonDetails = await Future.wait(
-        tvSpecificDetails.seasons.map(
-          (s) =>
-              tmdbService.fetchTVSeasonDetails(widget.tmdbId, s.seasonNumber),
-        ),
-      );
+  @override
+  Null buildAppBar() {
+    return null;//
+  }
+
+  @override
+  Widget buildContent() {
+    if (_mediaData == null) {
+      return const Center(child: Text('No media details found.'));
     }
 
-    setState(() => isLoading = false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
     final backdropPath = _mediaData?.backdropPath;
     final title = _mediaData?.title ?? 'Details';
 
-    return Scaffold(
-      extendBodyBehindAppBar: true, // Allow body to extend behind AppBar
-      body: CustomScrollView(
-        slivers: <Widget>[
-          MediaBackdropAppBar( // ✅ без обгортки!
-            title: title,
-            backdropPath: backdropPath,
+    return CustomScrollView(
+      slivers: <Widget>[
+        MediaBackdropAppBar(title: title, backdropPath: backdropPath),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: MediaHeaderSection(media: _mediaData!),
           ),
+        ),
+
+        // Movie play button
+        if (widget.type == MediaType.movie)
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: MediaHeaderSection(media: _mediaData!),
+            child: MoviePlayButton(
+              episodeKey: generateMovieKey(widget.tmdbId.toString()),
+              theme: theme,
+              isFetchingStreams: isFetchingStreams,
+              onPlayPressed: () => _handleMoviePlay(),
             ),
           ),
-          if (widget.type == MediaType.movie)
-            SliverToBoxAdapter(
-              child: MoviePlayButton(
-                episodeKey: generateMovieKey(widget.tmdbId.toString()),
-                theme: theme,
-                isFetchingStreams: _isFetchingStreams,
-                onPlayPressed: () {
-                  if (_mediaData != null) {
-                    _fetchAndShowStreamsForMovie(
-                      _mediaData!.title,
-                      _mediaData!.originalTitle,
-                    );
-                  }
-                },
-              ),
+
+        // TV seasons list
+        if (widget.type == MediaType.tv && _seasonDetails != null)
+          SliverToBoxAdapter(
+            child: TVSeasonsList(
+              seasonDetails: _seasonDetails!,
+              tmdbId: widget.tmdbId,
+              loadingEpisode: _loadingTappedEpisode,
+              mediaData: _mediaData,
+              onEpisodeTap: _handleTVEpisodeTap,
             ),
-          if (widget.type == MediaType.tv && seasonDetails != null)
-            SliverToBoxAdapter(
-              child: TVSeasonsList(
-                seasonDetails: seasonDetails!,
-                tmdbId: widget.tmdbId,
-                loadingEpisode: _loadingTappedEpisode,
-                mediaData: _mediaData,
-                onEpisodeTap: _fetchAndShowStreamsForTVEpisode,
-              ),
+          ),
+
+        // Production companies section
+        if (_mediaData?.productionCompanies != null &&
+            _mediaData!.productionCompanies.isNotEmpty)
+          SliverToBoxAdapter(
+            child: ProductionCastSection(
+              theme: theme,
+              companies: _mediaData!.productionCompanies,
             ),
-          if (_mediaData?.productionCompanies != null &&
-              _mediaData!.productionCompanies.isNotEmpty)
-            SliverToBoxAdapter(
-              child: ProductionCastSection(
-                theme: theme,
-                companies: _mediaData!.productionCompanies,
-              ),
-            ),
-          SliverToBoxAdapter(child: SizedBox(height: 20)), // Bottom padding
-        ],
-      ),
+          ),
+
+        const SliverToBoxAdapter(
+          child: SizedBox(height: 20), // Bottom padding
+        ),
+      ],
     );
   }
 
-  Future<void> _fetchAndShowStreamsForMovie(
-    String title,
-    String? originalTitle,
-  ) async {
+  Future<void> _handleMoviePlay() async {
     if (_mediaData == null) return;
-    setState(() {
-      _isFetchingStreams = true;
-    });
-    try {
-      final streams = await onlineServerApi.getVideoSteams(
-        title,
-        originalTitle, // Use original title if available
-        0, // Season 0 for movies
-        0, // Episode 0 for movies
-      );
-      if (!mounted) return;
-      if (streams.streams.isNotEmpty) {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (context) {
-            return StreamSelectorModal(
-              itemTitle: title,
-              streams: streams,
-              onStreamSelected: (url, name) {
-                showPlayOptionsDialog(
-                  context: context,
-                  streamUrl: url,
-                  streamName: originalTitle!,
-                  contentTitle: title,
-                  episodeKey: generateMovieKey(widget.tmdbId.toString()),
-                  fileName: 'Movie_${widget.tmdbId}',
-                );
-              },
-            );
-          },
-        );
-      } else {
-        showErrorSnackbar(context, 'No streams found for this episode.');
-      }
-    } catch (e) {
-      if (!mounted) return;
-      showErrorSnackbar(context, 'Error fetching streams: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isFetchingStreams = false;
-        });
-      }
-    }
+
+    await showStreamSelectorFromApi(
+      context: context,
+      title: _mediaData!.title,
+      originalTitle: _mediaData!.originalTitle,
+      movieDetails: _mediaData as MovieDetails,
+      contentTitle: _mediaData!.title,
+      episodeKey: generateMovieKey(widget.tmdbId.toString()),
+      fileName: 'Movie_${widget.tmdbId}',
+    );
   }
 
-  Future<void> _fetchAndShowStreamsForTVEpisode(
+  Future<void> _handleTVEpisodeTap(
     TVSeasonDetails season,
     TVEpisode episode,
     String? seriesTitle,
     String? seriesOriginalTitle,
   ) async {
     if (_mediaData == null) return;
+
     setState(() {
-      _isFetchingStreams = true;
       _loadingTappedEpisode = episode;
     });
     try {
-      final streams = await onlineServerApi.getVideoSteams(
-        seriesTitle!,
-        seriesOriginalTitle, // Use original series title
-        season.seasonNumber,
-        episode.episodeNumber,
+      await showStreamSelectorFromApi(
+        context: context,
+        title: seriesTitle!,
+        originalTitle: seriesOriginalTitle,
+        season: season,
+        episode: episode,
+        contentTitle: seriesTitle,
+        episodeKey: generateEpisodeKey(
+          _mediaData!.id.toString(),
+          season.seasonNumber.toString(),
+          episode.episodeNumber.toString(),
+        ),
+        fileName:
+            '${seriesTitle.replaceAll(" ", "_")}_S${season.seasonNumber}E${episode.episodeNumber}',
       );
-      if (!mounted) return;
-      if (streams.streams.isNotEmpty) {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (context) {
-            return StreamSelectorModal(
-              itemTitle: seriesTitle,
-              streams: streams,
-              onStreamSelected: (url, name) {
-                showPlayOptionsDialog(
-                  context: context,
-                  streamUrl: url,
-                  streamName: name,
-                  contentTitle: seriesTitle,
-                  episodeKey:
-                      generateEpisodeKey(_mediaData!.id.toString(), season.seasonNumber.toString(), episode.episodeNumber.toString()),
-                  fileName:
-                      '${seriesTitle.replaceAll(" ", "_")}_S${season.seasonNumber}E${episode.episodeNumber}',
-                );
-              },
-            );
-          },
-        );
-      } else {
-        showErrorSnackbar(context, 'No streams found for this episode.');
-      }
     } catch (e) {
-      if (!mounted) return;
       showErrorSnackbar(context, 'Error fetching streams: $e');
     } finally {
       if (mounted) {
         setState(() {
-          _isFetchingStreams = false;
           _loadingTappedEpisode = null;
         });
       }

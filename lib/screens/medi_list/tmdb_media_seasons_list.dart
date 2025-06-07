@@ -54,7 +54,7 @@ class TVSeasonsList extends StatelessWidget {
         String? embedUrl,
       ) {
         if (season is TVSeasonDetails && episode is TVEpisode) {
-          onEpisodeTap(season, episode, embedUrl, contentTitle);
+          onEpisodeTap(season, episode, mediaData?.title, mediaData?.originalTitle!);
         } else {
           debugPrint(
             "Error: Could not cast GenericSeason/GenericEpisode back to TMDB specific types in TVSeasonsList.",

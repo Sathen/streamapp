@@ -10,42 +10,72 @@ class SearchScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<SearchProvider>(context);
-    final textTheme = Theme
-        .of(context)
-        .textTheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Search API', style: textTheme.titleLarge),
-      ),
+      appBar: AppBar(title: Text('Search API', style: textTheme.titleLarge)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search),
               ),
               style: textTheme.bodyLarge,
               onSubmitted: provider.search,
             ),
             const SizedBox(height: 16),
+
+            // Search History Section
+            if (provider.recentSearches.isNotEmpty) ...[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Recent Searches',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: provider.recentSearches.length,
+                  itemBuilder: (context, index) {
+                    final searchTerm = provider.recentSearches[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: ActionChip(
+                        label: Text(searchTerm),
+                        onPressed: () => provider.search(searchTerm),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Search Results Section
             if (provider.isLoading)
               const Center(child: CircularProgressIndicator())
+            else if (provider.error != null)
+              Text(
+                "Error: ${provider.error}",
+                style: textTheme.bodyMedium?.copyWith(color: Colors.red),
+              )
+            else if (provider.results.items.isEmpty)
+              Text(
+                "No results",
+                style: textTheme.bodyMedium?.copyWith(color: Colors.white60),
+              )
             else
-              if (provider.error != null)
-                Text("Error: ${provider.error}",
-                    style: textTheme.bodyMedium?.copyWith(color: Colors.red))
-              else
-                if (provider.results.items.isEmpty)
-                  Text("No results",
-                      style: textTheme.bodyMedium?.copyWith(
-                          color: Colors.white60))
-                else
-                  Expanded(
-                      child: _buildBody(provider.results)
-                  ),
+              Expanded(child: _buildBody(provider.results)),
           ],
         ),
       ),
@@ -53,8 +83,6 @@ class SearchScreen extends StatelessWidget {
   }
 
   Widget _buildBody(SearchResult result) {
-    return SearchResultSection(
-        searchResult: result
-    );
+    return SearchResultSection(searchResult: result);
   }
 }

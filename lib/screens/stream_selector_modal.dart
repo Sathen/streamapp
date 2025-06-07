@@ -48,18 +48,20 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
-      if (widget.streams.streams.isEmpty) const Text("Джерел не знайдено."),
-      ...widget.streams.streams.keys.map(
+      if (widget.streams.data.isEmpty) const Text("Джерел не знайдено."),
+      ...widget.streams.data.map(
         (source) => ListTile(
-          title: Text(source),
-          onTap: () => setState(() => selectedSource = source),
+          title: Text(source.sourceName),
+          onTap: () => setState(() => selectedSource = source.sourceName),
         ),
       ),
     ];
   }
 
   List<Widget> _buildTranslatorSelection() {
-    final translators = widget.streams.streams[selectedSource] ?? [];
+    final translators = widget.streams.data
+        .firstWhere((d) => d.sourceName == selectedSource).sources;
+
     return [
       Text(
         "🗣 Перекладач (Джерело: $selectedSource)",

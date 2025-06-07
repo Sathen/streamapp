@@ -5,7 +5,6 @@ import 'generic_media_details.dart'; // Often needed for @required or similar an
 
 enum MediaType { movie, tv, unknown }
 
-// TmdbMediaDetails now implements GenericMediaData
 abstract class TmdbMediaDetails implements GenericMediaData {
   final int id;
   final String overview;
