@@ -8,16 +8,14 @@ import 'package:stream_flutter/providers/home_screen_provider.dart';
 import 'package:stream_flutter/providers/search_provider.dart';
 import 'package:stream_flutter/screens/downloads_screen.dart';
 import 'package:stream_flutter/screens/home_screen.dart';
-import 'package:stream_flutter/screens/media_detail_screen.dart';
 import 'package:stream_flutter/screens/online_media_details_screen.dart';
-import 'package:stream_flutter/screens/search_screen.dart';
+import 'package:stream_flutter/screens/search/search_screen.dart';
 import 'package:stream_flutter/screens/tmdb_media_details_screen.dart';
 import 'package:stream_flutter/services/media_service.dart';
 
 import 'models/tmdb_models.dart';
 
 GoRouter createRouter(AuthProvider authProvider) {
-  // var loginR = GoRoute(path: '/login', builder: (context, state) => LoginScreen());
   var homeR = GoRoute(
         path: '/',
         builder: (context, state) {
@@ -43,12 +41,6 @@ GoRouter createRouter(AuthProvider authProvider) {
       );
     },
   );
-  var mediaDetails = GoRoute(
-        path: '/media/:id',
-        builder:
-            (context, state) =>
-                JellyfinMediaDetailScreen(mediaId: state.pathParameters['id']!),
-      );
   var mediaOnlineDetails = GoRoute(
         path: '/media/online',
         builder:
@@ -79,9 +71,7 @@ GoRouter createRouter(AuthProvider authProvider) {
     initialLocation: '/',
     debugLogDiagnostics: true,
     routes: [
-      // loginR,
       homeR,
-      // mediaDetails,
       searchR,
       mediaOnlineDetails,
       mediaTmdbDetails,

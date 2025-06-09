@@ -7,7 +7,7 @@ import 'package:stream_flutter/models/online_media_details_entity.dart';
 import 'package:stream_flutter/models/search_result.dart';
 
 class OnlineServerApi {
-  static const HOST = 'http://192.168.1.28:3535';
+  static const HOST = 'https://fetcher.domcinema.win';
 
   OnlineServerApi();
 

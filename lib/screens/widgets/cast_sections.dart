@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CastChipList extends StatelessWidget {
-  final List<Map<String, dynamic>> cast;
+  final List<String> cast;
 
   const CastChipList({super.key, required this.cast});
 
@@ -15,8 +15,7 @@ class CastChipList extends StatelessWidget {
       children: cast
           .map(
             (actor) => Chip(
-              label: Text(
-                '${actor['name']} (${actor['role'] ?? 'Unknown Role'})',
+              label: Text('$actor)',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               backgroundColor: Theme.of(context).colorScheme.surface,
