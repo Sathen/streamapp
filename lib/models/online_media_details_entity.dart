@@ -29,11 +29,9 @@ class OnlineMediaDetailsEntity implements GenericMediaData {
     embedUrl = data["embed_url"];
 
     if (data["cast"] != null) {
-      // Added null check for safety
       data["cast"].forEach((actor) => cast.add(actor));
     }
     if (data["seasons"] != null) {
-      // Added null check for safety
       data["seasons"]?.forEach(
         (season) => seasons.add(OnlineMediaDetailsSeasons.fromJson(season)),
       );
@@ -55,7 +53,7 @@ class OnlineMediaDetailsEpisode implements GenericEpisode {
   @override
   late String airDate;
   @override
-  late String stillPath;
+  late String? stillPath;
   @override
   late String embedUrl;
 

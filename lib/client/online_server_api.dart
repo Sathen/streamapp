@@ -29,10 +29,11 @@ class OnlineServerApi {
     }
   }
 
-  Future<OnlineMediaDetailsEntity> get(String path) async {
+  Future<OnlineMediaDetailsEntity> get(SearchItem item) async {
     try {
-      final response = await http.get(
-        Uri.parse("$HOST/online/get?path=$path"),
+      final response = await http.post(
+        Uri.parse("$HOST/online/get"),
+        body: item.toString(),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {

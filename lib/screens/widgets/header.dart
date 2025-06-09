@@ -7,7 +7,7 @@ class HeaderImage extends StatelessWidget {
 
   const HeaderImage({
     super.key,
-    required this.backdropUrl,
+    this.backdropUrl,
     required this.fallbackPosterUrl,
   });
 

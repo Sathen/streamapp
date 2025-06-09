@@ -33,8 +33,18 @@ class SearchItem {
     rating = data["rating"];
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'path': path,
+      'img': img,
+      'year': year,
+      'rating': rating,
+    };
+  }
+
   @override
   String toString() {
-    return jsonEncode(this);
+    return jsonEncode(toJson());
   }
 }

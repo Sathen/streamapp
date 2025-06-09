@@ -5,15 +5,16 @@ import 'package:stream_flutter/screens/movie_play_button.dart';
 import 'package:stream_flutter/screens/widgets/header.dart';
 import 'package:stream_flutter/providers/download_manager.dart';
 
+import '../models/search_result.dart';
 import '../util/errors.dart';
 import 'base_media_screen.dart';
 import 'medi_list/online_media_seasons_list.dart';
 import 'media_header_section.dart';
 
 class OnlineMediaDetailScreen extends BaseMediaDetailScreen {
-  final String path;
+  final SearchItem searchItem;
 
-  const OnlineMediaDetailScreen({super.key, required this.path});
+  const OnlineMediaDetailScreen({super.key, required this.searchItem});
 
   @override
   State<OnlineMediaDetailScreen> createState() =>
@@ -31,7 +32,7 @@ class _OnlineMediaDetailScreenState
     setLoadingState(true);
 
     try {
-      final mediaDetail = await serverApi.get(widget.path);
+      final mediaDetail = await serverApi.get(widget.searchItem);
 
       if (!mounted) return;
 
@@ -51,14 +52,14 @@ class _OnlineMediaDetailScreenState
       return const Center(child: Text('No media details found.'));
     }
 
-    final mediaDetails = _mediaDetails!;
+    final mediaDetails = _mediaDetails;
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: HeaderImage(
-            backdropUrl: mediaDetails.backdropPath,
-            fallbackPosterUrl: mediaDetails.posterPath,
+            backdropUrl: mediaDetails?.backdropPath,
+            fallbackPosterUrl: mediaDetails!.posterPath,
           ),
         ),
         SliverPadding(

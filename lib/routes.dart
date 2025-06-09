@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/models/search_result.dart';
 import 'package:stream_flutter/providers/auth_provider.dart';
 import 'package:stream_flutter/providers/home_screen_provider.dart';
 import 'package:stream_flutter/providers/search_provider.dart';
@@ -49,12 +50,11 @@ GoRouter createRouter(AuthProvider authProvider) {
                 JellyfinMediaDetailScreen(mediaId: state.pathParameters['id']!),
       );
   var mediaOnlineDetails = GoRoute(
-        path: '/media/online/:id',
+        path: '/media/online',
         builder:
             (context, state) {
-              String pathParameter = state.pathParameters['id']!;
-              var path = Utf8Decoder().convert(Base64Decoder().convert(pathParameter));
-              return OnlineMediaDetailScreen(path: path);
+              SearchItem item = state.extra as SearchItem;
+              return OnlineMediaDetailScreen(searchItem: item);
             },
       );
   var downloadsScreen = GoRoute(
@@ -81,7 +81,7 @@ GoRouter createRouter(AuthProvider authProvider) {
     routes: [
       // loginR,
       homeR,
-      mediaDetails,
+      // mediaDetails,
       searchR,
       mediaOnlineDetails,
       mediaTmdbDetails,

@@ -45,7 +45,8 @@ class SearchResultSection extends StatelessWidget {
   Widget _buildMediaCard(BuildContext context, SearchItem item) {
     return GestureDetector(
       onTap: () => context.push(
-        '/media/online/${Base64Encoder.urlSafe().convert(item.path!.codeUnits)}',
+        '/media/online',
+        extra: item
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
