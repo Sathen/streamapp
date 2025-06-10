@@ -8,6 +8,7 @@ import 'package:stream_flutter/providers/download_manager.dart';
 
 import '../models/tmdb_models.dart';
 import '../util/errors.dart';
+import '../util/media_utils.dart';
 import 'base_media_screen.dart';
 import 'media_back_drop_appbar.dart';
 import 'media_header_section.dart';
@@ -488,7 +489,7 @@ class _MediaDetailsScreenState
         movieDetails: _mediaData as MovieDetails,
         contentTitle: _mediaData!.title,
         episodeKey: generateMovieKey(widget.tmdbId.toString()),
-        fileName: 'Movie_${widget.tmdbId}',
+        fileName: MediaUtils.generateMovieFileName(_mediaData!.title),
       );
     } catch (e) {
       if (mounted) {

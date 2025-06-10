@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/generic_media_details.dart';
 import '../../providers/download_manager.dart';
@@ -31,13 +32,6 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
   List<GenericSeason> _displayableSeasons = [];
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
-  // Helper to check if device is in portrait mode and small
-  bool get _isPortraitPhone {
-    final size = MediaQuery.of(context).size;
-    final orientation = MediaQuery.of(context).orientation;
-    return orientation == Orientation.portrait && size.width < 600;
-  }
 
   @override
   void initState() {
@@ -94,45 +88,51 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenSize = MediaQuery.of(context).size;
 
     if (_displayableSeasons.isEmpty) {
-      return _buildEmptyState(theme);
+      return _buildEmptyState(theme, screenSize);
     }
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Season selector - only show if multiple seasons
-          if (_displayableSeasons.length > 1) ...[
-            _buildSeasonSelector(theme),
-            SizedBox(height: _isPortraitPhone ? 16 : 20),
-          ],
+    return Consumer<DownloadManager>(
+      builder: (context, downloadManager, child) {
+        return FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Season selector - only show if multiple seasons
+              if (_displayableSeasons.length > 1) ...[
+                _buildSeasonSelector(theme, screenSize),
+                SizedBox(height: screenSize.height * 0.02),
+              ],
 
-          // Episodes list
-          _buildEpisodesList(theme),
-        ],
-      ),
+              // Episodes list with download manager context
+              _buildEpisodesList(theme, screenSize, downloadManager),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme) {
+  Widget _buildEmptyState(ThemeData theme, Size screenSize) {
     return Container(
-      padding: EdgeInsets.all(_isPortraitPhone ? 32 : 48),
+      padding: EdgeInsets.all(screenSize.width * 0.08),
       child: Column(
         children: [
           Icon(
             Icons.tv_off_rounded,
-            size: _isPortraitPhone ? 48 : 64,
+            size: screenSize.width * 0.12,
             color: theme.colorScheme.onSurface.withOpacity(0.3),
           ),
-          SizedBox(height: _isPortraitPhone ? 16 : 24),
+          SizedBox(height: screenSize.height * 0.02),
           Text(
             "No episodes available",
             style: theme.textTheme.titleLarge?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.7),
               fontWeight: FontWeight.w600,
+              fontSize: screenSize.width * 0.045,
             ),
             textAlign: TextAlign.center,
           ),
@@ -141,9 +141,9 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
     );
   }
 
-  Widget _buildSeasonSelector(ThemeData theme) {
+  Widget _buildSeasonSelector(ThemeData theme, Size screenSize) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: _isPortraitPhone ? 16 : 20),
+      margin: EdgeInsets.symmetric(horizontal: screenSize.width * 0.04),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -153,28 +153,28 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
             final isSelected = _selectedSeason.seasonNumber == season.seasonNumber;
 
             return Container(
-              margin: EdgeInsets.only(right: _isPortraitPhone ? 8 : 12),
+              margin: EdgeInsets.only(right: screenSize.width * 0.02),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => _onSeasonChanged(season.seasonNumber),
-                  borderRadius: BorderRadius.circular(_isPortraitPhone ? 20 : 24),
+                  borderRadius: BorderRadius.circular(screenSize.width * 0.05),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: EdgeInsets.symmetric(
-                      horizontal: _isPortraitPhone ? 16 : 20,
-                      vertical: _isPortraitPhone ? 8 : 10,
+                      horizontal: screenSize.width * 0.04,
+                      vertical: screenSize.height * 0.01,
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? theme.colorScheme.primary
                           : theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(_isPortraitPhone ? 20 : 24),
+                      borderRadius: BorderRadius.circular(screenSize.width * 0.05),
                     ),
                     child: Text(
                       'Season ${season.seasonNumber}',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: _isPortraitPhone ? 13 : 14,
+                        fontSize: (screenSize.width * 0.035).clamp(12.0, 16.0),
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                         color: isSelected
                             ? Colors.white
@@ -191,23 +191,24 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
     );
   }
 
-  Widget _buildEpisodesList(ThemeData theme) {
+  Widget _buildEpisodesList(ThemeData theme, Size screenSize, DownloadManager downloadManager) {
     if (_selectedSeason.episodes.isEmpty) {
       return Container(
-        padding: EdgeInsets.all(_isPortraitPhone ? 32 : 48),
+        padding: EdgeInsets.all(screenSize.width * 0.08),
         child: Column(
           children: [
             Icon(
               Icons.playlist_remove_rounded,
-              size: _isPortraitPhone ? 40 : 48,
+              size: screenSize.width * 0.1,
               color: theme.colorScheme.onSurface.withOpacity(0.3),
             ),
-            SizedBox(height: _isPortraitPhone ? 12 : 16),
+            SizedBox(height: screenSize.height * 0.015),
             Text(
               "No episodes in Season ${_selectedSeason.seasonNumber}",
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
                 fontWeight: FontWeight.w500,
+                fontSize: screenSize.width * 0.04,
               ),
               textAlign: TextAlign.center,
             ),
@@ -222,12 +223,14 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
       itemCount: _selectedSeason.episodes.length,
       separatorBuilder: (context, index) => Container(
         height: 1,
-        margin: EdgeInsets.symmetric(horizontal: _isPortraitPhone ? 16 : 20),
+        margin: EdgeInsets.symmetric(horizontal: screenSize.width * 0.04),
         color: theme.colorScheme.outline.withOpacity(0.1),
       ),
       itemBuilder: (context, index) {
         final episode = _selectedSeason.episodes[index];
         final bool isCurrentlyLoading = widget.loadingEpisode?.episodeNumber == episode.episodeNumber;
+
+
         final String episodeKey = generateEpisodeKey(
           widget.mediaData!.tmdbId,
           _selectedSeason.seasonNumber.toString(),

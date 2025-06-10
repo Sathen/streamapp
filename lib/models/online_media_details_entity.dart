@@ -25,7 +25,7 @@ class OnlineMediaDetailsEntity implements GenericMediaData {
     title = data["title"];
     description = data["description"];
     year = data["year"];
-    tmdbId = data["tmdb"].toString();
+    tmdbId = data["tmdb_id"].toString();
     rating = data["rating"];
     posterPath = data["posterPath"];
     backdropPath = data["backdropPath"];
