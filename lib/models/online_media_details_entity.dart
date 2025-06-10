@@ -9,6 +9,8 @@ class OnlineMediaDetailsEntity implements GenericMediaData {
   late String description;
   late List<String> cast = [];
   late String year;
+  @override
+  late String tmdbId;
   late double rating;
   @override
   late String posterPath;
@@ -23,6 +25,7 @@ class OnlineMediaDetailsEntity implements GenericMediaData {
     title = data["title"];
     description = data["description"];
     year = data["year"];
+    tmdbId = data["tmdb"].toString();
     rating = data["rating"];
     posterPath = data["posterPath"];
     backdropPath = data["backdropPath"];

@@ -229,7 +229,7 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
         final episode = _selectedSeason.episodes[index];
         final bool isCurrentlyLoading = widget.loadingEpisode?.episodeNumber == episode.episodeNumber;
         final String episodeKey = generateEpisodeKey(
-          widget.mediaId!,
+          widget.mediaData!.tmdbId,
           _selectedSeason.seasonNumber.toString(),
           episode.episodeNumber.toString(),
         );

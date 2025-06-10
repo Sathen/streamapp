@@ -83,6 +83,9 @@ class TVDetails extends TmdbMediaDetails {
               .toList(),
     );
   }
+
+  @override
+  String get tmdbId => id.toString();
 }
 
 class TVSeasonSummary {
@@ -240,6 +243,10 @@ class MovieDetails extends TmdbMediaDetails {
               .toList(),
     );
   }
+
+  @override
+  // TODO: implement tmdbId
+  String get tmdbId => super.id.toString();
 }
 
 class Genre {

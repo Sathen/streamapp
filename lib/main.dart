@@ -11,25 +11,29 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final authService = AuthService();
+  final downloadManager = DownloadManager();
+  await downloadManager.initialize();
   await authService.init();
 
-  runApp(MyApp(authService: authService));
+  runApp(MyApp(authService: authService, downloadManager: downloadManager,));
 }
 
 class MyApp extends StatelessWidget {
   final AuthService authService;
+  final DownloadManager downloadManager;
 
-  const MyApp({super.key, required this.authService});
+  const MyApp({super.key, required this.authService, required this.downloadManager});
 
   @override
   Widget build(BuildContext context) {
     final authProvider = AuthProvider(authService);
+    final downM = downloadManager;
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: authProvider),
         ChangeNotifierProvider<DownloadManager>(
-          create: (_) => DownloadManager(),
+          create: (_) => downM,
         ),
       ],
       child: Builder(

@@ -6,7 +6,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DownloadInfo {
   double progress;
@@ -14,6 +14,7 @@ class DownloadInfo {
   double speedBytesPerSecond;
   String? totalSize; // Formatted string like "100 MB"
   bool isCompleted;
+
   DownloadInfo({
     this.progress = 0.0,
     this.downloadedBytes = 0,
@@ -30,18 +31,88 @@ class DownloadInfo {
   }
 }
 
-
 class DownloadManager extends ChangeNotifier {
-  final Map<String, DownloadInfo> _downloadInfoMap = {}; // episodeKey -> DownloadInfo
+  final Map<String, DownloadInfo> _downloadInfoMap = {}; // episodeKey -> DownloadInfo (active downloads)
   final Map<String, CancelToken> _cancelTokens = {}; // episodeKey -> cancel token
   final Map<String, Stopwatch> _stopwatches = {}; // episodeKey -> stopwatch for speed calculation
   final Map<String, int> _totalSegmentLengths = {}; // episodeKey -> sum of TS segment lengths in bytes
 
+  // Track completed downloads
+  final Set<String> _downloadedEpisodes = {}; // episodeKey set for completed downloads
+  final Map<String, String> _downloadedFilePaths = {}; // episodeKey -> file path
+
   Map<String, DownloadInfo> get downloadInfoMap => Map.unmodifiable(_downloadInfoMap);
+  Set<String> get downloadedEpisodes => Set.unmodifiable(_downloadedEpisodes);
 
   bool isDownloading(String episodeKey) => _downloadInfoMap.containsKey(episodeKey);
+  bool isDownloaded(String episodeKey) => _downloadedEpisodes.contains(episodeKey);
 
-  DownloadInfo getDownloadInfo(String episodeKey) => _downloadInfoMap[episodeKey] ?? DownloadInfo();
+  String? getDownloadedFilePath(String episodeKey) => _downloadedFilePaths[episodeKey];
+
+  DownloadInfo getDownloadInfo(String episodeKey) {
+    if (_downloadInfoMap.containsKey(episodeKey)) {
+      return _downloadInfoMap[episodeKey]!;
+    }
+    // If not currently downloading but is downloaded, return completed info
+    if (_downloadedEpisodes.contains(episodeKey)) {
+      return DownloadInfo(progress: 1.0, isCompleted: true);
+    }
+    return DownloadInfo();
+  }
+
+  // Initialize and load saved download states
+  Future<void> initialize() async {
+    await _loadDownloadedEpisodes();
+  }
+
+  // Load downloaded episodes from SharedPreferences and verify files exist
+  Future<void> _loadDownloadedEpisodes() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final downloadedKeys = prefs.getStringList('downloaded_episodes') ?? [];
+
+      for (String episodeKey in downloadedKeys) {
+        final filePath = prefs.getString('file_path_$episodeKey');
+        if (filePath != null && await File(filePath).exists()) {
+          _downloadedEpisodes.add(episodeKey);
+          _downloadedFilePaths[episodeKey] = filePath;
+        } else {
+          // File doesn't exist, remove from preferences
+          await _removeDownloadedEpisode(episodeKey);
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      developer.log('Error loading downloaded episodes: $e');
+    }
+  }
+
+  // Save downloaded episode to SharedPreferences
+  Future<void> _saveDownloadedEpisode(String episodeKey, String filePath) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _downloadedEpisodes.add(episodeKey);
+      _downloadedFilePaths[episodeKey] = filePath;
+
+      await prefs.setStringList('downloaded_episodes', _downloadedEpisodes.toList());
+      await prefs.setString('file_path_$episodeKey', filePath);
+    } catch (e) {
+      developer.log('Error saving downloaded episode: $e');
+    }
+  }
+
+  Future<void> _removeDownloadedEpisode(String episodeKey) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _downloadedEpisodes.remove(episodeKey);
+      _downloadedFilePaths.remove(episodeKey);
+
+      await prefs.setStringList('downloaded_episodes', _downloadedEpisodes.toList());
+      await prefs.remove('file_path_$episodeKey');
+    } catch (e) {
+      developer.log('Error removing downloaded episode: $e');
+    }
+  }
 
   Future<void> downloadEpisode({
     required String episodeKey, // e.g. "movie_87234" or "tv_1253_s1e1"
@@ -49,6 +120,7 @@ class DownloadManager extends ChangeNotifier {
     required String fileName,
   }) async {
     if (_downloadInfoMap.containsKey(episodeKey)) return; // already downloading
+    if (_downloadedEpisodes.contains(episodeKey)) return; // already downloaded
 
     fileName = _sanitizeFileName(fileName);
     developer.log("Start download with episode key: $episodeKey and fileName: $fileName ");
@@ -62,17 +134,20 @@ class DownloadManager extends ChangeNotifier {
     _totalSegmentLengths[episodeKey] = 0; // Reset for this download
     notifyListeners();
 
+    String? finalFilePath;
+
     try {
       final response = await Dio().get(m3u8Url);
       final lines = response.data.toString().split('\n');
-      final tsUrls =
-      lines
+      final tsUrls = lines
           .where((line) => line.trim().isNotEmpty && !line.startsWith('#'))
           .map((line) => Uri.parse(m3u8Url).resolve(line).toString())
           .toList();
 
       final dir = await getApplicationDocumentsDirectory();
       final outputFile = File('${dir.path}/$fileName.ts');
+      finalFilePath = outputFile.path;
+
       if (await outputFile.exists()) await outputFile.delete();
       final sink = outputFile.openWrite();
 
@@ -110,10 +185,10 @@ class DownloadManager extends ChangeNotifier {
           }
         } on DioException catch (e) {
           if (e.type == DioExceptionType.cancel) {
-            developer.log('Download for $episodeKey cancelled at segment \$i');
+            developer.log('Download for $episodeKey cancelled at segment $i');
             break; // Exit loop if cancelled
           }
-          debugPrint('Failed to download segment $i for $episodeKey: \$e');
+          debugPrint('Failed to download segment $i for $episodeKey: $e');
           // Decide whether to continue or break on segment failure
           continue; // Try next segment
         } catch (e) {
@@ -125,20 +200,26 @@ class DownloadManager extends ChangeNotifier {
       await sink.flush();
       await sink.close();
 
-      // Final update for completion
-      _downloadInfoMap[episodeKey]?.isCompleted = true; // Mark as completed
-      notifyListeners();
-      developer.log('Download completed for $episodeKey');
+      // Check if download was not cancelled and file exists
+      if (!cancelToken.isCancelled && await File(finalFilePath).exists()) {
+        // Save as completed download
+        await _saveDownloadedEpisode(episodeKey, finalFilePath);
+        developer.log('Download completed for $episodeKey at $finalFilePath');
+      }
 
     } catch (e) {
       if (e is DioException && e.type == DioExceptionType.cancel) {
         developer.log('Download for $episodeKey was cancelled.');
+        // Delete partial file if it exists
+        if (finalFilePath != null && await File(finalFilePath).exists()) {
+          await File(finalFilePath).delete();
+        }
       } else {
         debugPrint('Download failed for $episodeKey: $e');
       }
     } finally {
       _stopwatches[episodeKey]?.stop();
-      _downloadInfoMap.remove(episodeKey); // Remove after completion or cancellation
+      _downloadInfoMap.remove(episodeKey); // Remove from active downloads
       _cancelTokens.remove(episodeKey);
       _stopwatches.remove(episodeKey);
       _totalSegmentLengths.remove(episodeKey);
@@ -149,6 +230,22 @@ class DownloadManager extends ChangeNotifier {
   void cancelDownload(String episodeKey) {
     _cancelTokens[episodeKey]?.cancel();
     // The finally block in downloadEpisode will handle removal from maps and notifyListeners
+  }
+
+  // Delete a downloaded episode
+  Future<bool> deleteDownloadedEpisode(String episodeKey) async {
+    try {
+      final filePath = _downloadedFilePaths[episodeKey];
+      if (filePath != null && await File(filePath).exists()) {
+        await File(filePath).delete();
+      }
+      await _removeDownloadedEpisode(episodeKey);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      developer.log('Error deleting downloaded episode $episodeKey: $e');
+      return false;
+    }
   }
 
   String _formatBytes(int bytes) {
@@ -181,6 +278,6 @@ String _sanitizeFileName(String fileName) {
 String generateEpisodeKey(
     String id, String seasonNumber, String episodeNumber
     ) =>
-    'tv_${_sanitizeFileName(id)}_s$seasonNumber.e$episodeNumber'; // Note: your existing `generateEpisodeKey` used `.` instead of `e`
+    'tv_${_sanitizeFileName(id)}_s$seasonNumber.e$episodeNumber';
 
 String generateMovieKey(String tmdbId) => 'movie_$tmdbId';

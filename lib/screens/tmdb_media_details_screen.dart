@@ -518,7 +518,7 @@ class _MediaDetailsScreenState
         episode: episode,
         contentTitle: seriesTitle,
         episodeKey: generateEpisodeKey(
-          _mediaData!.id.toString(),
+          _mediaData!.tmdbId.toString(),
           season.seasonNumber.toString(),
           episode.episodeNumber.toString(),
         ),

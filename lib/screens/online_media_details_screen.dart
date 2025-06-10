@@ -584,7 +584,7 @@ class _OnlineMediaDetailScreenState
         embedUrl: embedUrl,
         contentTitle: contentTitle ?? _mediaDetails!.title,
         episodeKey: generateEpisodeKey(
-          _mediaDetails!.title,
+          _mediaDetails!.tmdbId,
           season.seasonNumber.toString(),
           episode.episodeNumber.toString(),
         ),
