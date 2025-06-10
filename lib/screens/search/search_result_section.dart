@@ -64,10 +64,16 @@ class _SearchResultSectionState extends State<SearchResultSection>
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
-    const double spacing = 16.0;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final availableHeight = screenHeight - keyboardHeight;
+    final isKeyboardVisible = keyboardHeight > 0;
 
-    // Enhanced responsive design
-    double targetCardWidth = _getOptimalCardWidth(screenWidth);
+    // Adjust spacing based on available space
+    final double spacing = isKeyboardVisible ? 12.0 : 16.0;
+
+    // Enhanced responsive design with keyboard consideration
+    double targetCardWidth = _getOptimalCardWidth(screenWidth, isKeyboardVisible);
     int crossAxisCount = _calculateCrossAxisCount(screenWidth, targetCardWidth, spacing);
 
     return Container(
@@ -84,20 +90,25 @@ class _SearchResultSectionState extends State<SearchResultSection>
       child: CustomScrollView(
         controller: _scrollController,
         slivers: [
-          _buildResultsHeader(context),
+          _buildResultsHeader(context, isKeyboardVisible),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: EdgeInsets.fromLTRB(
+                isKeyboardVisible ? 12 : 16,
+                isKeyboardVisible ? 4 : 8,
+                isKeyboardVisible ? 12 : 16,
+                isKeyboardVisible ? 8 : 16
+            ),
             sliver: SliverGrid(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
                 crossAxisSpacing: spacing,
                 mainAxisSpacing: spacing,
-                childAspectRatio: _getChildAspectRatio(screenWidth),
+                childAspectRatio: _getChildAspectRatio(screenWidth, isKeyboardVisible),
               ),
               delegate: SliverChildBuilderDelegate(
                     (context, index) {
                   if (index < widget.searchResult.items.length) {
-                    return _buildMediaCard(context, widget.searchResult.items[index], index);
+                    return _buildMediaCard(context, widget.searchResult.items[index], index, isKeyboardVisible);
                   }
                   return null;
                 },
@@ -105,19 +116,27 @@ class _SearchResultSectionState extends State<SearchResultSection>
               ),
             ),
           ),
-          if (widget.isLoading) _buildLoadingIndicator(),
-          if (widget.hasMore && !widget.isLoading) _buildLoadMoreButton(),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
+          if (widget.isLoading) _buildLoadingIndicator(isKeyboardVisible),
+          if (widget.hasMore && !widget.isLoading) _buildLoadMoreButton(isKeyboardVisible),
+          SliverToBoxAdapter(child: SizedBox(height: isKeyboardVisible ? 10 : 20)),
         ],
       ),
     );
   }
 
-  double _getOptimalCardWidth(double screenWidth) {
-    if (screenWidth < 600) return 140;
-    if (screenWidth < 900) return 160;
-    if (screenWidth < 1200) return 180;
-    return 200;
+  double _getOptimalCardWidth(double screenWidth, bool isKeyboardVisible) {
+    // Smaller cards when keyboard is visible to fit more content
+    if (isKeyboardVisible) {
+      if (screenWidth < 600) return 120;
+      if (screenWidth < 900) return 140;
+      if (screenWidth < 1200) return 160;
+      return 180;
+    } else {
+      if (screenWidth < 600) return 140;
+      if (screenWidth < 900) return 160;
+      if (screenWidth < 1200) return 180;
+      return 200;
+    }
   }
 
   int _calculateCrossAxisCount(double screenWidth, double cardWidth, double spacing) {
@@ -125,17 +144,29 @@ class _SearchResultSectionState extends State<SearchResultSection>
     return count.clamp(2, 8);
   }
 
-  double _getChildAspectRatio(double screenWidth) {
-    if (screenWidth < 600) return 0.65;
-    if (screenWidth < 900) return 0.68;
-    return 0.7;
+  double _getChildAspectRatio(double screenWidth, bool isKeyboardVisible) {
+    // Adjust aspect ratio when keyboard is visible
+    if (isKeyboardVisible) {
+      if (screenWidth < 600) return 0.6;
+      if (screenWidth < 900) return 0.62;
+      return 0.65;
+    } else {
+      if (screenWidth < 600) return 0.65;
+      if (screenWidth < 900) return 0.68;
+      return 0.7;
+    }
   }
 
-  Widget _buildResultsHeader(BuildContext context) {
+  Widget _buildResultsHeader(BuildContext context, bool isKeyboardVisible) {
     return SliverToBoxAdapter(
       child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-        padding: const EdgeInsets.all(16),
+        margin: EdgeInsets.fromLTRB(
+            isKeyboardVisible ? 12 : 16,
+            isKeyboardVisible ? 8 : 16,
+            isKeyboardVisible ? 12 : 16,
+            isKeyboardVisible ? 4 : 8
+        ),
+        padding: EdgeInsets.all(isKeyboardVisible ? 12 : 16),
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlue,
           borderRadius: BorderRadius.circular(16),
@@ -154,7 +185,7 @@ class _SearchResultSectionState extends State<SearchResultSection>
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(isKeyboardVisible ? 6 : 8),
               decoration: BoxDecoration(
                 color: AppTheme.accentBlue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
@@ -166,10 +197,10 @@ class _SearchResultSectionState extends State<SearchResultSection>
               child: Icon(
                 Icons.search_rounded,
                 color: AppTheme.accentBlue,
-                size: 20,
+                size: isKeyboardVisible ? 16 : 20,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: isKeyboardVisible ? 8 : 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,30 +208,35 @@ class _SearchResultSectionState extends State<SearchResultSection>
                   Text(
                     'Search Results',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontSize: isKeyboardVisible ? 16 : null,
                       color: AppTheme.highEmphasisText,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  SizedBox(height: isKeyboardVisible ? 1 : 2),
                   Text(
                     '${widget.searchResult.items.length} result${widget.searchResult.items.length != 1 ? 's' : ''} found',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: isKeyboardVisible ? 10 : null,
                       color: AppTheme.mediumEmphasisText,
                     ),
                   ),
                 ],
               ),
             ),
-            _buildResultCount(),
+            _buildResultCount(isKeyboardVisible),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildResultCount() {
+  Widget _buildResultCount(bool isKeyboardVisible) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+          horizontal: isKeyboardVisible ? 8 : 12,
+          vertical: isKeyboardVisible ? 4 : 6
+      ),
       decoration: BoxDecoration(
         color: AppTheme.primaryBlue.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
@@ -214,16 +250,16 @@ class _SearchResultSectionState extends State<SearchResultSection>
         children: [
           Icon(
             Icons.format_list_numbered_rounded,
-            size: 16,
+            size: isKeyboardVisible ? 12 : 16,
             color: AppTheme.primaryBlue,
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: isKeyboardVisible ? 2 : 4),
           Text(
             '${widget.searchResult.items.length}',
             style: TextStyle(
               color: AppTheme.primaryBlue,
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: isKeyboardVisible ? 12 : 14,
             ),
           ),
         ],
@@ -231,38 +267,38 @@ class _SearchResultSectionState extends State<SearchResultSection>
     );
   }
 
-  Widget _buildMediaCard(BuildContext context, SearchItem item, int index) {
+  Widget _buildMediaCard(BuildContext context, SearchItem item, int index, bool isKeyboardVisible) {
     return Hero(
       tag: 'search_item_${item.title}_$index',
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => context.push('/media/online', extra: item),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(isKeyboardVisible ? 12 : 16),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(isKeyboardVisible ? 12 : 16),
               border: Border.all(
                 color: AppTheme.outlineVariant,
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withOpacity(isKeyboardVisible ? 0.15 : 0.2),
+                  blurRadius: isKeyboardVisible ? 8 : 12,
+                  offset: Offset(0, isKeyboardVisible ? 2 : 4),
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(isKeyboardVisible ? 12 : 16),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _buildPosterImage(item),
+                  _buildPosterImage(item, isKeyboardVisible),
                   _buildGradientOverlay(),
-                  _buildCardContent(context, item),
-                  _buildRatingBadge(item),
+                  _buildCardContent(context, item, isKeyboardVisible),
+                  _buildRatingBadge(item, isKeyboardVisible),
                 ],
               ),
             ),
@@ -272,7 +308,7 @@ class _SearchResultSectionState extends State<SearchResultSection>
     );
   }
 
-  Widget _buildPosterImage(SearchItem item) {
+  Widget _buildPosterImage(SearchItem item, bool isKeyboardVisible) {
     return Container(
       color: AppTheme.surfaceVariant,
       child: item.img != null
@@ -285,10 +321,10 @@ class _SearchResultSectionState extends State<SearchResultSection>
             color: AppTheme.surfaceVariant,
             child: Center(
               child: SizedBox(
-                width: 32,
-                height: 32,
+                width: isKeyboardVisible ? 24 : 32,
+                height: isKeyboardVisible ? 24 : 32,
                 child: CircularProgressIndicator(
-                  strokeWidth: 3,
+                  strokeWidth: isKeyboardVisible ? 2 : 3,
                   valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentBlue),
                   value: loadingProgress.expectedTotalBytes != null
                       ? loadingProgress.cumulativeBytesLoaded /
@@ -299,13 +335,13 @@ class _SearchResultSectionState extends State<SearchResultSection>
             ),
           );
         },
-        errorBuilder: (context, error, _) => _buildErrorPlaceholder(),
+        errorBuilder: (context, error, _) => _buildErrorPlaceholder(isKeyboardVisible),
       )
-          : _buildErrorPlaceholder(),
+          : _buildErrorPlaceholder(isKeyboardVisible),
     );
   }
 
-  Widget _buildErrorPlaceholder() {
+  Widget _buildErrorPlaceholder(bool isKeyboardVisible) {
     return Container(
       color: AppTheme.surfaceVariant,
       child: Column(
@@ -313,15 +349,15 @@ class _SearchResultSectionState extends State<SearchResultSection>
         children: [
           Icon(
             Icons.movie_rounded,
-            size: 40,
+            size: isKeyboardVisible ? 32 : 40,
             color: AppTheme.lowEmphasisText,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: isKeyboardVisible ? 4 : 8),
           Text(
             'No Image',
             style: TextStyle(
               color: AppTheme.lowEmphasisText,
-              fontSize: 12,
+              fontSize: isKeyboardVisible ? 10 : 12,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -348,31 +384,35 @@ class _SearchResultSectionState extends State<SearchResultSection>
     );
   }
 
-  Widget _buildCardContent(BuildContext context, SearchItem item) {
+  Widget _buildCardContent(BuildContext context, SearchItem item, bool isKeyboardVisible) {
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.all(isKeyboardVisible ? 8 : 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               item.title,
-              maxLines: 2,
+              maxLines: isKeyboardVisible ? 1 : 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: isKeyboardVisible ? 12 : null,
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
                 height: 1.2,
               ),
             ),
             if (item.year != null) ...[
-              const SizedBox(height: 4),
+              SizedBox(height: isKeyboardVisible ? 2 : 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: EdgeInsets.symmetric(
+                    horizontal: isKeyboardVisible ? 4 : 6,
+                    vertical: isKeyboardVisible ? 1 : 2
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.accentBlue.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(4),
@@ -385,7 +425,7 @@ class _SearchResultSectionState extends State<SearchResultSection>
                   item.year.toString(),
                   style: TextStyle(
                     color: AppTheme.accentBlue,
-                    fontSize: 10,
+                    fontSize: isKeyboardVisible ? 8 : 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -397,17 +437,20 @@ class _SearchResultSectionState extends State<SearchResultSection>
     );
   }
 
-  Widget _buildRatingBadge(SearchItem item) {
+  Widget _buildRatingBadge(SearchItem item, bool isKeyboardVisible) {
     if (item.rating == null) return const SizedBox.shrink();
 
     return Positioned(
-      top: 8,
-      right: 8,
+      top: isKeyboardVisible ? 4 : 8,
+      right: isKeyboardVisible ? 4 : 8,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        padding: EdgeInsets.symmetric(
+            horizontal: isKeyboardVisible ? 4 : 6,
+            vertical: isKeyboardVisible ? 2 : 3
+        ),
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(isKeyboardVisible ? 6 : 8),
           border: Border.all(
             color: AppTheme.accentBlue.withOpacity(0.5),
             width: 1,
@@ -418,15 +461,15 @@ class _SearchResultSectionState extends State<SearchResultSection>
           children: [
             Icon(
               Icons.star_rounded,
-              size: 12,
+              size: isKeyboardVisible ? 10 : 12,
               color: AppTheme.accentBlue,
             ),
-            const SizedBox(width: 2),
+            SizedBox(width: isKeyboardVisible ? 1 : 2),
             Text(
               item.rating!.toStringAsFixed(1),
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 10,
+                fontSize: isKeyboardVisible ? 8 : 10,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -436,27 +479,27 @@ class _SearchResultSectionState extends State<SearchResultSection>
     );
   }
 
-  Widget _buildLoadingIndicator() {
+  Widget _buildLoadingIndicator(bool isKeyboardVisible) {
     return SliverToBoxAdapter(
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(isKeyboardVisible ? 16 : 24),
         child: Center(
           child: Column(
             children: [
               SizedBox(
-                width: 32,
-                height: 32,
+                width: isKeyboardVisible ? 24 : 32,
+                height: isKeyboardVisible ? 24 : 32,
                 child: CircularProgressIndicator(
-                  strokeWidth: 3,
+                  strokeWidth: isKeyboardVisible ? 2 : 3,
                   valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentBlue),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: isKeyboardVisible ? 8 : 12),
               Text(
                 'Loading more results...',
                 style: TextStyle(
                   color: AppTheme.mediumEmphasisText,
-                  fontSize: 14,
+                  fontSize: isKeyboardVisible ? 12 : 14,
                 ),
               ),
             ],
@@ -466,19 +509,25 @@ class _SearchResultSectionState extends State<SearchResultSection>
     );
   }
 
-  Widget _buildLoadMoreButton() {
+  Widget _buildLoadMoreButton(bool isKeyboardVisible) {
     return SliverToBoxAdapter(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(
+            horizontal: isKeyboardVisible ? 12 : 16,
+            vertical: isKeyboardVisible ? 4 : 8
+        ),
         child: Center(
           child: ElevatedButton.icon(
             onPressed: widget.onLoadMore,
-            icon: Icon(Icons.refresh_rounded, size: 18),
+            icon: Icon(Icons.refresh_rounded, size: isKeyboardVisible ? 16 : 18),
             label: const Text('Load More'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryBlue,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                  horizontal: isKeyboardVisible ? 16 : 24,
+                  vertical: isKeyboardVisible ? 8 : 12
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -490,6 +539,8 @@ class _SearchResultSectionState extends State<SearchResultSection>
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final isKeyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -502,11 +553,11 @@ class _SearchResultSectionState extends State<SearchResultSection>
           ],
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
+      child: Center(
+        child: SingleChildScrollView( // Make scrollable when keyboard is visible
+          child: Container(
+            margin: EdgeInsets.all(isKeyboardVisible ? 8 : 16),
+            padding: EdgeInsets.all(isKeyboardVisible ? 16 : 32),
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlue,
               borderRadius: BorderRadius.circular(24),
@@ -526,7 +577,7 @@ class _SearchResultSectionState extends State<SearchResultSection>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(isKeyboardVisible ? 16 : 20),
                   decoration: BoxDecoration(
                     color: AppTheme.accentBlue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(50),
@@ -537,22 +588,24 @@ class _SearchResultSectionState extends State<SearchResultSection>
                   ),
                   child: Icon(
                     Icons.search_off_rounded,
-                    size: 48,
+                    size: isKeyboardVisible ? 36 : 48,
                     color: AppTheme.accentBlue,
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: isKeyboardVisible ? 16 : 24),
                 Text(
                   'No Results Found',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontSize: isKeyboardVisible ? 18 : null,
                     color: AppTheme.highEmphasisText,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: isKeyboardVisible ? 8 : 12),
                 Text(
                   'Try adjusting your search terms or filters to find what you\'re looking for.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: isKeyboardVisible ? 12 : null,
                     color: AppTheme.mediumEmphasisText,
                   ),
                   textAlign: TextAlign.center,
@@ -560,7 +613,7 @@ class _SearchResultSectionState extends State<SearchResultSection>
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

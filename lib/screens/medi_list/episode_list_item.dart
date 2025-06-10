@@ -32,19 +32,59 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   bool _isDownloadingFile = false;
   double _downloadProgress = 0.0;
   bool _isDownloaded = false;
+  DownloadManager? _downloadManager;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setupDownloadListener();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _setupDownloadListener();
+  }
+
+  void _setupDownloadListener() {
+    _downloadManager = context.read<DownloadManager>();
     _updateDownloadState();
+
+    // Add listener for real-time updates
+    _downloadManager?.addListener(_onDownloadStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _downloadManager?.removeListener(_onDownloadStateChanged);
+    super.dispose();
+  }
+
+  void _onDownloadStateChanged() {
+    if (mounted) {
+      _updateDownloadState();
+    }
   }
 
   void _updateDownloadState() {
-    final downloadManager = context.read<DownloadManager>();
-    _isDownloadingFile = downloadManager.isDownloading(widget.episodeKey);
-    final downloadInfo = downloadManager.getDownloadInfo(widget.episodeKey);
+    if (_downloadManager == null) return;
+
+    final wasDownloading = _isDownloadingFile;
+    final oldProgress = _downloadProgress;
+
+    _isDownloadingFile = _downloadManager!.isDownloading(widget.episodeKey);
+    final downloadInfo = _downloadManager!.getDownloadInfo(widget.episodeKey);
     _downloadProgress = downloadInfo.progress;
     _isDownloaded = downloadInfo.isCompleted;
+
+    // Only setState if something actually changed
+    if (wasDownloading != _isDownloadingFile ||
+        oldProgress != _downloadProgress ||
+        mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -248,10 +288,17 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.download,
-              size: 14,
-              color: theme.colorScheme.primary,
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                value: _downloadProgress,
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  theme.colorScheme.primary,
+                ),
+                backgroundColor: theme.colorScheme.primary.withOpacity(0.3),
+              ),
             ),
             const SizedBox(width: 6),
             Text(
@@ -404,8 +451,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
               ? null
               : _isDownloadingFile
               ? () {
-            final downloadManager = context.read<DownloadManager>();
-            downloadManager.cancelDownload(widget.episodeKey);
+            _downloadManager?.cancelDownload(widget.episodeKey);
             setState(() {
               _isDownloadingFile = false;
               _downloadProgress = 0.0;
