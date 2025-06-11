@@ -1,3 +1,4 @@
+// lib/presentation/providers/download/download_provider.dart - Updated version
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:io';
@@ -36,6 +37,50 @@ class DownloadInfo {
   }
 }
 
+class DownloadedFileInfo {
+  final String episodeKey;
+  final String filePath;
+  final int fileSize;
+  final DateTime lastModified;
+
+  DownloadedFileInfo({
+    required this.episodeKey,
+    required this.filePath,
+    required this.fileSize,
+    required this.lastModified,
+  });
+
+  String get fileName => episodeKey.replaceAll('_', ' ');
+
+  String get formattedSize => _formatBytes(fileSize);
+
+  String get formattedDate {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final fileDate = DateTime(
+      lastModified.year,
+      lastModified.month,
+      lastModified.day,
+    );
+
+    if (fileDate == today) {
+      return 'Today';
+    } else if (fileDate == yesterday) {
+      return 'Yesterday';
+    } else {
+      return '${lastModified.day}/${lastModified.month}/${lastModified.year}';
+    }
+  }
+
+  static String _formatBytes(int bytes) {
+    if (bytes <= 0) return '0 B';
+    const suffixes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    var i = (log(bytes) / log(1024)).floor();
+    return '${(bytes / pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
+  }
+}
+
 class DownloadProvider extends BaseProvider {
   final Map<String, DownloadInfo> _downloadInfoMap = {};
   final Map<String, CancelToken> _cancelTokens = {};
@@ -44,11 +89,17 @@ class DownloadProvider extends BaseProvider {
   final Set<String> _downloadedEpisodes = {};
   final Map<String, String> _downloadedFilePaths = {};
 
+  // Cache for downloaded file info
+  List<DownloadedFileInfo> _downloadedFileInfoList = [];
+
   // Getters
   Map<String, DownloadInfo> get downloadInfoMap =>
       Map.unmodifiable(_downloadInfoMap);
 
   Set<String> get downloadedEpisodes => Set.unmodifiable(_downloadedEpisodes);
+
+  List<DownloadedFileInfo> get downloadedFilesList =>
+      List.unmodifiable(_downloadedFileInfoList);
 
   bool isDownloading(String episodeKey) =>
       _downloadInfoMap.containsKey(episodeKey);
@@ -73,8 +124,71 @@ class DownloadProvider extends BaseProvider {
     try {
       setLoading(true);
       await _loadDownloadedEpisodes();
+      await loadDownloadedFiles();
     } catch (e) {
       setError('Failed to initialize downloads: ${e.toString()}');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  Future<void> loadDownloadedFiles() async {
+    try {
+      setLoading(true);
+      clearError();
+
+      final directory = await getApplicationDocumentsDirectory();
+      final dir = Directory(directory.path);
+
+      final files =
+          await dir
+              .list()
+              .where(
+                (file) =>
+                    file.path.endsWith('.mp4') ||
+                    file.path.endsWith('.ts') ||
+                    file.path.endsWith('.m3u8'),
+              )
+              .toList();
+
+      // Sort by last modified (newest first)
+      files.sort(
+        (a, b) => File(
+          b.path,
+        ).lastModifiedSync().compareTo(File(a.path).lastModifiedSync()),
+      );
+
+      final List<DownloadedFileInfo> fileInfoList = [];
+
+      for (final file in files) {
+        final stat = file.statSync();
+        String? matchingEpisodeKey;
+
+        // Find matching episode key
+        for (final episodeKey in _downloadedEpisodes) {
+          final filePath = _downloadedFilePaths[episodeKey];
+          if (filePath == file.path) {
+            matchingEpisodeKey = episodeKey;
+            break;
+          }
+        }
+
+        if (matchingEpisodeKey != null) {
+          fileInfoList.add(
+            DownloadedFileInfo(
+              episodeKey: matchingEpisodeKey,
+              filePath: file.path,
+              fileSize: stat.size,
+              lastModified: stat.modified,
+            ),
+          );
+        }
+      }
+
+      _downloadedFileInfoList = fileInfoList;
+      safeNotifyListeners();
+    } catch (e) {
+      setError('Error loading downloads: ${e.toString()}');
     } finally {
       setLoading(false);
     }
@@ -195,6 +309,7 @@ class DownloadProvider extends BaseProvider {
 
       if (!cancelToken.isCancelled && await File(finalFilePath).exists()) {
         await _saveDownloadedEpisode(episodeKey, finalFilePath);
+        await loadDownloadedFiles(); // Refresh the list
         developer.log('Download completed for $episodeKey at $finalFilePath');
       }
     } catch (e) {
@@ -227,11 +342,39 @@ class DownloadProvider extends BaseProvider {
         await File(filePath).delete();
       }
       await _removeDownloadedEpisode(episodeKey);
+      await loadDownloadedFiles(); // Refresh the list
       safeNotifyListeners();
       return true;
     } catch (e) {
       setError('Error deleting downloaded episode $episodeKey: $e');
       return false;
+    }
+  }
+
+  Future<void> deleteAllDownloads() async {
+    try {
+      setLoading(true);
+
+      // Delete all downloaded files
+      for (final episodeKey in _downloadedEpisodes.toList()) {
+        final filePath = _downloadedFilePaths[episodeKey];
+        if (filePath != null && await File(filePath).exists()) {
+          await File(filePath).delete();
+        }
+        await _removeDownloadedEpisode(episodeKey);
+      }
+
+      // Cancel any active downloads
+      for (final episodeKey in _downloadInfoMap.keys.toList()) {
+        cancelDownload(episodeKey);
+      }
+
+      await loadDownloadedFiles(); // Refresh the list
+      safeNotifyListeners();
+    } catch (e) {
+      setError('Error deleting all downloads: $e');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -286,8 +429,6 @@ String _sanitizeFileName(String fileName) {
           .replaceAll(RegExp(r'\s+'), '_')
           .replaceAll(RegExp(r'_+'), '_')
           .trim();
-
-  sanitized = sanitized.replaceAll(RegExp(r'^_+|_+$'), '');
 
   if (sanitized.isEmpty) sanitized = 'download';
   if (sanitized.length > 200) sanitized = sanitized.substring(0, 200);

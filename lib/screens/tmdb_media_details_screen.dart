@@ -1,12 +1,12 @@
 // lib/screens/media_details_screen.dart
 import 'package:flutter/material.dart';
-import 'package:stream_flutter/providers/download_manager.dart';
 import 'package:stream_flutter/screens/medi_list/tmdb_media_seasons_list.dart';
 import 'package:stream_flutter/screens/production_cast_section.dart';
 
 import '../core/theme/app_theme.dart';
 import '../data/datasources/remote/services/media_service.dart';
 import '../data/models/models/tmdb_models.dart';
+import '../presentation/providers/download/download_provider.dart';
 import '../util/errors.dart';
 import '../util/media_utils.dart';
 import 'base_media_screen.dart';

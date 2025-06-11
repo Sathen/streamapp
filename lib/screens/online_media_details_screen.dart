@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:stream_flutter/providers/download_manager.dart';
 import 'package:stream_flutter/screens/medi_list/season_episode_switcher.dart';
 import 'package:stream_flutter/screens/media_back_drop_appbar.dart';
 import 'package:stream_flutter/screens/movie_play_button.dart';
@@ -7,6 +6,7 @@ import 'package:stream_flutter/screens/movie_play_button.dart';
 import '../data/models/models/generic_media_details.dart';
 import '../data/models/models/online_media_details_entity.dart';
 import '../data/models/models/search_result.dart';
+import '../presentation/providers/download/download_provider.dart';
 import 'base_media_screen.dart';
 import 'media_header_section.dart';
 

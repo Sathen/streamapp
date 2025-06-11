@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/download_manager.dart';
 import '../presentation/providers/download/download_provider.dart';
 
 class MoviePlayButton extends StatefulWidget {

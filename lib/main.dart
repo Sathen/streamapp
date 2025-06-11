@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 // Routing
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/presentation/screens/downloads/downloads_screen.dart';
 import 'package:stream_flutter/presentation/screens/search/search_screen.dart';
-import 'package:stream_flutter/screens/downloads_screen.dart';
 import 'package:stream_flutter/screens/online_media_details_screen.dart';
 import 'package:stream_flutter/screens/tmdb_media_details_screen.dart';
 
