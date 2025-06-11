@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:stream_flutter/models/search_result.dart';
 
-import '../theme.dart';
+import '../../core/theme/app_theme.dart';
+import '../../data/models/models/search_result.dart';
 
 class SearchResultSection extends StatefulWidget {
   final SearchResult searchResult;

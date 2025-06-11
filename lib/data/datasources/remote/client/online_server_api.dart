@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:http/http.dart' as http;
-import 'package:stream_flutter/models/video_streams.dart';
-import 'package:stream_flutter/models/online_media_details_entity.dart';
-import 'package:stream_flutter/models/search_result.dart';
+
+import '../../../models/models/online_media_details_entity.dart';
+import '../../../models/models/search_result.dart';
+import '../../../models/models/video_streams.dart';
 
 class OnlineServerApi {
   static const HOST = 'https://fetcher.domcinema.win';

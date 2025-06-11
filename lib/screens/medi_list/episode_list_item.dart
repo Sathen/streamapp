@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/generic_media_details.dart';
+import '../../data/models/models/generic_media_details.dart';
 import '../../providers/download_manager.dart';
 import '../../screens/video_player_screen.dart'; // Add this import
 

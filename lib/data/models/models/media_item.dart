@@ -1,4 +1,5 @@
-import 'package:stream_flutter/models/tmdb_models.dart';
+
+import 'package:stream_flutter/data/models/models/tmdb_models.dart';
 
 class MediaItem {
   final String id;

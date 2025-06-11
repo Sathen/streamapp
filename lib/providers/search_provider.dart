@@ -1,9 +1,10 @@
-import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:stream_flutter/client/online_server_api.dart';
 import 'dart:convert';
 
-import '../models/search_result.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../data/datasources/remote/client/online_server_api.dart';
+import '../data/models/models/search_result.dart';
 
 class SearchProvider with ChangeNotifier {
   List<String> _recentSearches = [];
@@ -13,8 +14,11 @@ class SearchProvider with ChangeNotifier {
   OnlineServerApi serverApi = OnlineServerApi();
 
   List<String> get recentSearches => _recentSearches;
+
   SearchResult get results => _results;
+
   bool get isLoading => _isLoading;
+
   String? get error => _error;
 
   SearchProvider() {

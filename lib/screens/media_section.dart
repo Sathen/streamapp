@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/media_item.dart';
+import '../data/models/models/media_item.dart';
 
 class MediaSection extends StatefulWidget {
   final String title;

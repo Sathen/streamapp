@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../models/series_models.dart';
+
+import '../../../models/models/series_models.dart';
 
 class JellyfinSeriesService {
   final String baseUrl;

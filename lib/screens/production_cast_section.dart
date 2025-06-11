@@ -1,7 +1,7 @@
 // production_cast_section.dart
 import 'package:flutter/material.dart';
 
-import '../models/tmdb_models.dart';
+import '../data/models/models/tmdb_models.dart';
 import 'chip_list.dart';
 
 class ProductionCastSection extends StatelessWidget {
@@ -31,10 +31,7 @@ class ProductionCastSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ChipList(
-              items: companyNames,
-              theme: theme,
-            ),
+            ChipList(items: companyNames, theme: theme),
             const SizedBox(height: 24),
           ],
         ],

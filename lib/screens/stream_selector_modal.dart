@@ -1,6 +1,6 @@
 // stream_selector_modal.dart
 import 'package:flutter/material.dart';
-import '../models/video_streams.dart';
+import '../data/models/models/video_streams.dart';
 
 class StreamSelectorModal extends StatefulWidget {
   final String itemTitle;
@@ -40,9 +40,7 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
             const SizedBox(height: 24),
             _buildProgressIndicator(),
             const SizedBox(height: 32),
-            Flexible(
-              child: _buildContent(),
-            ),
+            Flexible(child: _buildContent()),
           ],
         ),
       ),
@@ -85,7 +83,9 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
                   Text(
                     'Вибір стріму',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                   Text(
@@ -121,7 +121,12 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
     );
   }
 
-  Widget _buildStepIndicator(int step, int currentStep, String emoji, String label) {
+  Widget _buildStepIndicator(
+    int step,
+    int currentStep,
+    String emoji,
+    String label,
+  ) {
     final isActive = step <= currentStep;
     final isCurrent = step == currentStep;
 
@@ -132,23 +137,28 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: isActive
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.surfaceVariant,
+            color:
+                isActive
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.surfaceVariant,
             borderRadius: BorderRadius.circular(20),
-            border: isCurrent ? Border.all(
-              color: Theme.of(context).colorScheme.primary,
-              width: 2,
-            ) : null,
+            border:
+                isCurrent
+                    ? Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    )
+                    : null,
           ),
           child: Center(
             child: Text(
               emoji,
               style: TextStyle(
                 fontSize: 16,
-                color: isActive
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                color:
+                    isActive
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -157,9 +167,10 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: isActive
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            color:
+                isActive
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -173,9 +184,10 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
       height: 2,
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: isActive
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.surfaceVariant,
+        color:
+            isActive
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(1),
       ),
     );
@@ -229,9 +241,9 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
       children: [
         Text(
           "Оберіть джерело стріму",
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
         if (widget.streams.data.isEmpty)
@@ -261,8 +273,10 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
   }
 
   Widget _buildTranslatorSelection() {
-    final translators = widget.streams.data
-        .firstWhere((d) => d.sourceName == selectedSource).sources;
+    final translators =
+        widget.streams.data
+            .firstWhere((d) => d.sourceName == selectedSource)
+            .sources;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,7 +306,9 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
                   Text(
                     "Джерело: $selectedSource",
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -358,7 +374,9 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
                   Text(
                     "Переклад: ${selectedTranslator!.name}",
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -444,7 +462,9 @@ class _StreamSelectorModalState extends State<StreamSelectorModal> {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                   ],

@@ -1,18 +1,20 @@
 // lib/screens/widgets/online_media_seasons_list.dart
 import 'package:flutter/material.dart';
-import 'package:stream_flutter/models/online_media_details_entity.dart';
 import 'package:stream_flutter/screens/medi_list/season_episode_switcher.dart';
-import '../../models/generic_media_details.dart';
+
+import '../../data/models/models/generic_media_details.dart';
+import '../../data/models/models/online_media_details_entity.dart';
 
 class OnlineMediaSeasonsList extends StatefulWidget {
   final OnlineMediaDetailsEntity mediaDetails;
   final OnlineMediaDetailsEpisode? loadingEpisode;
   final void Function(
-      OnlineMediaDetailsSeasons season,
-      OnlineMediaDetailsEpisode episode,
-      String? embedUrl,
-      String? contentTitle,
-      ) onEpisodeTap;
+    OnlineMediaDetailsSeasons season,
+    OnlineMediaDetailsEpisode episode,
+    String? embedUrl,
+    String? contentTitle,
+  )
+  onEpisodeTap;
 
   const OnlineMediaSeasonsList({
     super.key,
@@ -52,10 +54,7 @@ class _OnlineMediaSeasonsListState extends State<OnlineMediaSeasonsList>
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     _fadeController.forward();
   }
@@ -122,7 +121,7 @@ class _OnlineMediaSeasonsListState extends State<OnlineMediaSeasonsList>
   Widget _buildSeasonsContent(ThemeData theme) {
     // Cast to the generic types that SeasonEpisodeSwitcher expects
     final List<OnlineMediaDetailsSeasons> genericSeasons =
-    widget.mediaDetails.seasons.cast<OnlineMediaDetailsSeasons>().toList();
+        widget.mediaDetails.seasons.cast<OnlineMediaDetailsSeasons>().toList();
     final GenericEpisode? genericLoadingEpisode = widget.loadingEpisode;
     final OnlineMediaDetailsEntity genericMediaData = widget.mediaDetails;
 
@@ -201,31 +200,31 @@ class _OnlineMediaSeasonsListState extends State<OnlineMediaSeasonsList>
   }
 
   int _getTotalEpisodes() {
-    return widget.mediaDetails.seasons
-        .fold<int>(0, (sum, season) => sum + season.episodes.length);
+    return widget.mediaDetails.seasons.fold<int>(
+      0,
+      (sum, season) => sum + season.episodes.length,
+    );
   }
 
   String _generateMediaId() {
     // Create a more robust media ID using title and hashCode
-    final baseId = widget.mediaDetails.title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+    final baseId = widget.mediaDetails.title.replaceAll(
+      RegExp(r'[^a-zA-Z0-9]'),
+      '_',
+    );
     final hashSuffix = widget.mediaDetails.hashCode.abs().toString();
     return '${baseId}_$hashSuffix';
   }
 
   void _handleEpisodeTap(
-      GenericSeason season,
-      GenericEpisode episode,
-      String? embedUrl,
-      String? contentTitle,
-      ) {
+    GenericSeason season,
+    GenericEpisode episode,
+    String? embedUrl,
+    String? contentTitle,
+  ) {
     if (season is OnlineMediaDetailsSeasons &&
         episode is OnlineMediaDetailsEpisode) {
-      widget.onEpisodeTap(
-        season,
-        episode,
-        embedUrl,
-        contentTitle,
-      );
+      widget.onEpisodeTap(season, episode, embedUrl, contentTitle);
     } else {
       // Enhanced error handling with user feedback
       debugPrint(

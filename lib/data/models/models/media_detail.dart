@@ -1,4 +1,5 @@
-import 'package:stream_flutter/models/online_media_details_entity.dart';
+
+import 'online_media_details_entity.dart';
 
 class MediaDetail {
   final String id;

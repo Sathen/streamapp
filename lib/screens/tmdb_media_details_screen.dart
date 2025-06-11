@@ -1,12 +1,12 @@
 // lib/screens/media_details_screen.dart
 import 'package:flutter/material.dart';
-import 'package:stream_flutter/screens/production_cast_section.dart';
-import 'package:stream_flutter/screens/medi_list/tmdb_media_seasons_list.dart';
-import 'package:stream_flutter/screens/theme.dart';
-import 'package:stream_flutter/services/media_service.dart';
 import 'package:stream_flutter/providers/download_manager.dart';
+import 'package:stream_flutter/screens/medi_list/tmdb_media_seasons_list.dart';
+import 'package:stream_flutter/screens/production_cast_section.dart';
 
-import '../models/tmdb_models.dart';
+import '../core/theme/app_theme.dart';
+import '../data/datasources/remote/services/media_service.dart';
+import '../data/models/models/tmdb_models.dart';
 import '../util/errors.dart';
 import '../util/media_utils.dart';
 import 'base_media_screen.dart';
@@ -59,29 +59,29 @@ class _MediaDetailsScreenState
       vsync: this,
     );
 
-    _fadeInAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _contentAnimationController!,
-      curve: Curves.easeOutCubic,
-    ));
+    _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _contentAnimationController!,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
     _slideInAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _contentAnimationController!,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _contentAnimationController!,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
-    _loadingPulseAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _loadingAnimationController!,
-      curve: Curves.easeInOut,
-    ));
+    _loadingPulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(
+        parent: _loadingAnimationController!,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   @override
@@ -109,7 +109,7 @@ class _MediaDetailsScreenState
         _mediaData = tvSpecificDetails;
         _seasonDetails = await Future.wait(
           tvSpecificDetails.seasons.map(
-                (s) =>
+            (s) =>
                 tmdbService.fetchTVSeasonDetails(widget.tmdbId, s.seasonNumber),
           ),
         );
@@ -162,7 +162,8 @@ class _MediaDetailsScreenState
       child: FadeTransition(
         opacity: _fadeInAnimation ?? const AlwaysStoppedAnimation(1.0),
         child: SlideTransition(
-          position: _slideInAnimation ?? const AlwaysStoppedAnimation(Offset.zero),
+          position:
+              _slideInAnimation ?? const AlwaysStoppedAnimation(Offset.zero),
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: <Widget>[
@@ -172,7 +173,10 @@ class _MediaDetailsScreenState
               // Header section with enhanced styling
               SliverToBoxAdapter(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -218,7 +222,10 @@ class _MediaDetailsScreenState
               if (widget.type == MediaType.tv && _seasonDetails != null)
                 SliverToBoxAdapter(
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: TVSeasonsList(
                       seasonDetails: _seasonDetails!,
                       tmdbId: widget.tmdbId,
@@ -243,9 +250,7 @@ class _MediaDetailsScreenState
                 ),
 
               // Enhanced bottom padding
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 40),
-              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 40)),
             ],
           ),
         ),
@@ -270,7 +275,8 @@ class _MediaDetailsScreenState
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedBuilder(
-              animation: _loadingPulseAnimation ?? const AlwaysStoppedAnimation(1.0),
+              animation:
+                  _loadingPulseAnimation ?? const AlwaysStoppedAnimation(1.0),
               builder: (context, child) {
                 final animationValue = _loadingPulseAnimation?.value ?? 1.0;
                 return Transform.scale(
@@ -312,10 +318,7 @@ class _MediaDetailsScreenState
               decoration: BoxDecoration(
                 color: AppTheme.surfaceBlue,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppTheme.outlineVariant,
-                  width: 1,
-                ),
+                border: Border.all(color: AppTheme.outlineVariant, width: 1),
               ),
               child: Column(
                 children: [
@@ -365,10 +368,7 @@ class _MediaDetailsScreenState
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlue,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: AppTheme.outlineVariant,
-                    width: 1,
-                  ),
+                  border: Border.all(color: AppTheme.outlineVariant, width: 1),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -399,7 +399,9 @@ class _MediaDetailsScreenState
                     const SizedBox(height: 24),
                     Text(
                       'Media Not Found',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(
+                        context,
+                      ).textTheme.headlineSmall?.copyWith(
                         color: AppTheme.highEmphasisText,
                         fontWeight: FontWeight.bold,
                       ),
@@ -421,7 +423,10 @@ class _MediaDetailsScreenState
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryBlue,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -449,10 +454,7 @@ class _MediaDetailsScreenState
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.outlineVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppTheme.outlineVariant, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -499,11 +501,11 @@ class _MediaDetailsScreenState
   }
 
   Future<void> _handleTVEpisodeTap(
-      TVSeasonDetails season,
-      TVEpisode episode,
-      String? seriesTitle,
-      String? seriesOriginalTitle,
-      ) async {
+    TVSeasonDetails season,
+    TVEpisode episode,
+    String? seriesTitle,
+    String? seriesOriginalTitle,
+  ) async {
     if (_mediaData == null) return;
 
     setState(() {
@@ -524,7 +526,7 @@ class _MediaDetailsScreenState
           episode.episodeNumber.toString(),
         ),
         fileName:
-        '${seriesTitle.replaceAll(" ", "_")}_S${season.seasonNumber}E${episode.episodeNumber}',
+            '${seriesTitle.replaceAll(" ", "_")}_S${season.seasonNumber}E${episode.episodeNumber}',
       );
     } catch (e) {
       if (mounted) {

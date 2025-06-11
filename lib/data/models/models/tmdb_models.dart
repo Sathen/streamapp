@@ -157,7 +157,6 @@ class TVEpisode implements GenericEpisode {
   String? get embedUrl => null;
 }
 
-// TVSeasonDetails now implements GenericSeason
 class TVSeasonDetails implements GenericSeason {
   @override
   final int seasonNumber;

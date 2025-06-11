@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/media_item.dart';
-import '../services/media_service.dart';
+import '../data/datasources/remote/services/media_service.dart';
+import '../data/models/models/media_item.dart';
 
 class HomeScreenProvider extends ChangeNotifier {
   final MediaService mediaService;

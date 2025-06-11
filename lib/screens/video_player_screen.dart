@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/video_player_service.dart';
-import '../models/media_detail.dart';
+
+import '../data/datasources/remote/services/video_player_service.dart';
 
 class VideoPlayerScreen extends StatelessWidget {
   final String streamUrl;

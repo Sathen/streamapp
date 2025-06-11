@@ -1,11 +1,12 @@
 // lib/screens/base_media_detail_screen.dart
 import 'package:flutter/material.dart';
-import 'package:stream_flutter/client/online_server_api.dart';
-import 'package:stream_flutter/models/tmdb_models.dart';
-import 'package:stream_flutter/models/video_streams.dart';
 import 'package:stream_flutter/screens/play_options_dialog.dart';
 import 'package:stream_flutter/screens/stream_selector_modal.dart';
 import 'package:stream_flutter/util/errors.dart';
+
+import '../data/datasources/remote/client/online_server_api.dart';
+import '../data/models/models/tmdb_models.dart';
+import '../data/models/models/video_streams.dart';
 
 // Abstract base class for media details
 abstract class BaseMediaDetailScreen extends StatefulWidget {

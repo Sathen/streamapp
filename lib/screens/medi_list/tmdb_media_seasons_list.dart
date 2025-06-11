@@ -1,8 +1,8 @@
 // tv_seasons_list.dart
 import 'package:flutter/material.dart';
-import 'package:stream_flutter/models/tmdb_models.dart'; // Your specific TMDB models
 import 'package:stream_flutter/screens/medi_list/season_episode_switcher.dart';
-import '../../models/generic_media_details.dart'; // Your generic models
+import '../../data/models/models/generic_media_details.dart';
+import '../../data/models/models/tmdb_models.dart';
 
 class TVSeasonsList extends StatefulWidget {
   final List<TVSeasonDetails> seasonDetails;

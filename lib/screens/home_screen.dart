@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:stream_flutter/screens/theme.dart';
 
+import '../core/theme/app_theme.dart';
 import '../providers/home_screen_provider.dart';
 import 'media_section.dart';
 

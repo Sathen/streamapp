@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../models/online_media_details_entity.dart';
-import '../models/tmdb_models.dart';
+import '../data/models/models/online_media_details_entity.dart';
+import '../data/models/models/tmdb_models.dart';
 
 class MediaHeaderSection extends StatefulWidget {
   final TmdbMediaDetails? media;

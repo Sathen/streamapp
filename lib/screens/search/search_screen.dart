@@ -1,10 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:stream_flutter/models/search_result.dart';
 import 'package:stream_flutter/screens/search/search_result_section.dart';
+
+import '../../core/theme/app_theme.dart';
 import '../../providers/search_provider.dart';
-import '../theme.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -15,7 +16,6 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen>
     with TickerProviderStateMixin {
-
   late TextEditingController _searchController;
   late FocusNode _searchFocusNode;
   late AnimationController _animationController;
@@ -50,21 +50,16 @@ class _SearchScreenState extends State<SearchScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
 
     _animationController.forward();
   }
@@ -79,7 +74,8 @@ class _SearchScreenState extends State<SearchScreen>
   }
 
   void _updateRecentSearchesVisibility() {
-    final shouldShow = _searchFocusNode.hasFocus && _searchController.text.isEmpty;
+    final shouldShow =
+        _searchFocusNode.hasFocus && _searchController.text.isEmpty;
     if (_showRecentSearches != shouldShow) {
       setState(() {
         _showRecentSearches = shouldShow;
@@ -168,7 +164,8 @@ class _SearchScreenState extends State<SearchScreen>
       backgroundColor: Colors.transparent,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: _isPhoneScreen ? 48 : 56, // Shorter on phones
+      toolbarHeight: _isPhoneScreen ? 48 : 56,
+      // Shorter on phones
       leading: IconButton(
         onPressed: () => Navigator.of(context).pop(),
         icon: Container(
@@ -176,10 +173,7 @@ class _SearchScreenState extends State<SearchScreen>
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlue.withOpacity(0.8),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: AppTheme.outlineVariant,
-              width: 1,
-            ),
+            border: Border.all(color: AppTheme.outlineVariant, width: 1),
           ),
           child: Icon(
             Icons.arrow_back_rounded,
@@ -190,16 +184,13 @@ class _SearchScreenState extends State<SearchScreen>
       ),
       title: Container(
         padding: EdgeInsets.symmetric(
-            horizontal: _isPhoneScreen ? 12 : 16,
-            vertical: _isPhoneScreen ? 6 : 8
+          horizontal: _isPhoneScreen ? 12 : 16,
+          vertical: _isPhoneScreen ? 6 : 8,
         ),
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlue.withOpacity(0.8),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: AppTheme.outlineVariant,
-            width: 1,
-          ),
+          border: Border.all(color: AppTheme.outlineVariant, width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -225,13 +216,16 @@ class _SearchScreenState extends State<SearchScreen>
     );
   }
 
-  Widget _buildCompactSearchSection(BuildContext context, bool isKeyboardVisible) {
+  Widget _buildCompactSearchSection(
+    BuildContext context,
+    bool isKeyboardVisible,
+  ) {
     return Container(
       margin: EdgeInsets.fromLTRB(
-          _isPhoneScreen ? 8 : 16,
-          _isPhoneScreen ? 4 : 8,
-          _isPhoneScreen ? 8 : 16,
-          0
+        _isPhoneScreen ? 8 : 16,
+        _isPhoneScreen ? 4 : 8,
+        _isPhoneScreen ? 8 : 16,
+        0,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -259,9 +253,10 @@ class _SearchScreenState extends State<SearchScreen>
             color: AppTheme.surfaceBlue,
             borderRadius: BorderRadius.circular(_isPhoneScreen ? 12 : 16),
             border: Border.all(
-              color: _searchFocusNode.hasFocus
-                  ? AppTheme.accentBlue
-                  : AppTheme.outlineColor,
+              color:
+                  _searchFocusNode.hasFocus
+                      ? AppTheme.accentBlue
+                      : AppTheme.outlineColor,
               width: _searchFocusNode.hasFocus ? 2 : 1,
             ),
             boxShadow: [
@@ -280,7 +275,10 @@ class _SearchScreenState extends State<SearchScreen>
               color: AppTheme.highEmphasisText,
             ),
             decoration: InputDecoration(
-              hintText: _isPhoneScreen ? 'Search movies, shows...' : 'Search for movies, TV shows...',
+              hintText:
+                  _isPhoneScreen
+                      ? 'Search movies, shows...'
+                      : 'Search for movies, TV shows...',
               hintStyle: TextStyle(
                 color: AppTheme.lowEmphasisText,
                 fontSize: _isPhoneScreen ? 14 : 16,
@@ -298,35 +296,36 @@ class _SearchScreenState extends State<SearchScreen>
                   size: _isPhoneScreen ? 16 : 20,
                 ),
               ),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                onPressed: _clearSearch,
-                icon: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.lowEmphasisText.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(
-                    Icons.clear_rounded,
-                    color: AppTheme.lowEmphasisText,
-                    size: _isPhoneScreen ? 14 : 16,
-                  ),
-                ),
-              )
-                  : provider.isLoading
-                  ? Container(
-                margin: EdgeInsets.all(_isPhoneScreen ? 8 : 12),
-                width: _isPhoneScreen ? 16 : 20,
-                height: _isPhoneScreen ? 16 : 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppTheme.accentBlue,
-                  ),
-                ),
-              )
-                  : null,
+              suffixIcon:
+                  _searchController.text.isNotEmpty
+                      ? IconButton(
+                        onPressed: _clearSearch,
+                        icon: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.lowEmphasisText.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.clear_rounded,
+                            color: AppTheme.lowEmphasisText,
+                            size: _isPhoneScreen ? 14 : 16,
+                          ),
+                        ),
+                      )
+                      : provider.isLoading
+                      ? Container(
+                        margin: EdgeInsets.all(_isPhoneScreen ? 8 : 12),
+                        width: _isPhoneScreen ? 16 : 20,
+                        height: _isPhoneScreen ? 16 : 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppTheme.accentBlue,
+                          ),
+                        ),
+                      )
+                      : null,
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: _isPhoneScreen ? 12 : 16,
@@ -364,10 +363,7 @@ class _SearchScreenState extends State<SearchScreen>
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlue.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(_isPhoneScreen ? 6 : 8),
-                  border: Border.all(
-                    color: AppTheme.outlineVariant,
-                    width: 1,
-                  ),
+                  border: Border.all(color: AppTheme.outlineVariant, width: 1),
                 ),
                 child: Text(
                   'Recent',
@@ -385,15 +381,22 @@ class _SearchScreenState extends State<SearchScreen>
               Expanded(
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: provider.recentSearches.take(_isPhoneScreen ? 5 : 8).length,
-                  separatorBuilder: (context, index) => SizedBox(width: _isPhoneScreen ? 4 : 6),
+                  itemCount:
+                      provider.recentSearches
+                          .take(_isPhoneScreen ? 5 : 8)
+                          .length,
+                  separatorBuilder:
+                      (context, index) =>
+                          SizedBox(width: _isPhoneScreen ? 4 : 6),
                   itemBuilder: (context, index) {
                     final searchTerm = provider.recentSearches[index];
                     return Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () => _selectRecentSearch(searchTerm),
-                        borderRadius: BorderRadius.circular(_isPhoneScreen ? 10 : 12),
+                        borderRadius: BorderRadius.circular(
+                          _isPhoneScreen ? 10 : 12,
+                        ),
                         child: Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: _isPhoneScreen ? 8 : 10,
@@ -401,7 +404,9 @@ class _SearchScreenState extends State<SearchScreen>
                           ),
                           decoration: BoxDecoration(
                             color: AppTheme.primaryBlue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(_isPhoneScreen ? 10 : 12),
+                            borderRadius: BorderRadius.circular(
+                              _isPhoneScreen ? 10 : 12,
+                            ),
                             border: Border.all(
                               color: AppTheme.primaryBlue.withOpacity(0.3),
                               width: 1,
@@ -476,10 +481,7 @@ class _SearchScreenState extends State<SearchScreen>
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlue,
           borderRadius: BorderRadius.circular(_isPhoneScreen ? 16 : 20),
-          border: Border.all(
-            color: AppTheme.outlineVariant,
-            width: 1,
-          ),
+          border: Border.all(color: AppTheme.outlineVariant, width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -515,7 +517,11 @@ class _SearchScreenState extends State<SearchScreen>
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String error, bool isKeyboardVisible) {
+  Widget _buildErrorState(
+    BuildContext context,
+    String error,
+    bool isKeyboardVisible,
+  ) {
     return Center(
       child: SingleChildScrollView(
         child: Container(
@@ -524,10 +530,7 @@ class _SearchScreenState extends State<SearchScreen>
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlue,
             borderRadius: BorderRadius.circular(_isPhoneScreen ? 16 : 20),
-            border: Border.all(
-              color: AppTheme.outlineVariant,
-              width: 1,
-            ),
+            border: Border.all(color: AppTheme.outlineVariant, width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -580,14 +583,17 @@ class _SearchScreenState extends State<SearchScreen>
                     _performSearch(_searchController.text);
                   }
                 },
-                icon: Icon(Icons.refresh_rounded, size: _isPhoneScreen ? 16 : 18),
+                icon: Icon(
+                  Icons.refresh_rounded,
+                  size: _isPhoneScreen ? 16 : 18,
+                ),
                 label: const Text('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryBlue,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(
-                      horizontal: _isPhoneScreen ? 16 : 24,
-                      vertical: _isPhoneScreen ? 8 : 12
+                    horizontal: _isPhoneScreen ? 16 : 24,
+                    vertical: _isPhoneScreen ? 8 : 12,
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -610,10 +616,7 @@ class _SearchScreenState extends State<SearchScreen>
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlue,
             borderRadius: BorderRadius.circular(_isPhoneScreen ? 16 : 24),
-            border: Border.all(
-              color: AppTheme.outlineVariant,
-              width: 1,
-            ),
+            border: Border.all(color: AppTheme.outlineVariant, width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -662,8 +665,8 @@ class _SearchScreenState extends State<SearchScreen>
               SizedBox(height: _isPhoneScreen ? 12 : 20),
               Container(
                 padding: EdgeInsets.symmetric(
-                    horizontal: _isPhoneScreen ? 10 : 16,
-                    vertical: _isPhoneScreen ? 6 : 8
+                  horizontal: _isPhoneScreen ? 10 : 16,
+                  vertical: _isPhoneScreen ? 6 : 8,
                 ),
                 decoration: BoxDecoration(
                   color: AppTheme.primaryBlue.withOpacity(0.1),
