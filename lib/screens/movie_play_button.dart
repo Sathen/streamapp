@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/download_manager.dart';
+import '../presentation/providers/download/download_provider.dart';
 
 class MoviePlayButton extends StatefulWidget {
   final VoidCallback onPlayPressed;
@@ -67,7 +68,7 @@ class _MoviePlayButtonState extends State<MoviePlayButton>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DownloadManager>(
+    return Consumer<DownloadProvider>(
       builder: (context, manager, _) {
         final downloadInfo = manager.getDownloadInfo(widget.episodeKey);
         final isDownloading = manager.isDownloading(widget.episodeKey);
@@ -165,7 +166,7 @@ class _MoviePlayButtonState extends State<MoviePlayButton>
     );
   }
 
-  Widget _buildDownloadSection(downloadInfo, DownloadManager manager) {
+  Widget _buildDownloadSection(downloadInfo, DownloadProvider manager) {
     return Container(
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
@@ -273,7 +274,7 @@ class _MoviePlayButtonState extends State<MoviePlayButton>
     );
   }
 
-  Widget _buildCancelButton(DownloadManager manager) {
+  Widget _buildCancelButton(DownloadProvider manager) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -295,7 +296,7 @@ class _MoviePlayButtonState extends State<MoviePlayButton>
     );
   }
 
-  void _showCancelDialog(DownloadManager manager) {
+  void _showCancelDialog(DownloadProvider manager) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

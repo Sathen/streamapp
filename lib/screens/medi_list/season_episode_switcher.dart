@@ -1,9 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/models/generic_media_details.dart';
-import '../../providers/download_manager.dart';
+import '../../presentation/providers/download/download_provider.dart'; // Updated import
 import 'episode_list_item.dart';
 
 class SeasonEpisodeSwitcher extends StatefulWidget {
@@ -11,7 +10,13 @@ class SeasonEpisodeSwitcher extends StatefulWidget {
   final String? mediaId;
   final GenericMediaData? mediaData;
   final GenericEpisode? loadingEpisode;
-  final Function(GenericSeason season, GenericEpisode episode, String? embedUrl, String? contentTitle) onEpisodeTap;
+  final Function(
+    GenericSeason season,
+    GenericEpisode episode,
+    String? embedUrl,
+    String? contentTitle,
+  )
+  onEpisodeTap;
 
   const SeasonEpisodeSwitcher({
     super.key,
@@ -54,7 +59,8 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
   }
 
   void _updateDisplayableSeasonsAndSelectDefault() {
-    _displayableSeasons = widget.allSeasons.where((s) => s.seasonNumber > 0).toList();
+    _displayableSeasons =
+        widget.allSeasons.where((s) => s.seasonNumber > 0).toList();
 
     if (_displayableSeasons.isNotEmpty) {
       _selectedSeason = _displayableSeasons.first;
@@ -80,7 +86,7 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
   void _onSeasonChanged(int seasonNumber) {
     setState(() {
       _selectedSeason = _displayableSeasons.firstWhere(
-            (s) => s.seasonNumber == seasonNumber,
+        (s) => s.seasonNumber == seasonNumber,
       );
     });
   }
@@ -94,8 +100,10 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
       return _buildEmptyState(theme, screenSize);
     }
 
-    return Consumer<DownloadManager>(
-      builder: (context, downloadManager, child) {
+    return Consumer<DownloadProvider>(
+      // Changed from DownloadManager to DownloadProvider
+      builder: (context, downloadProvider, child) {
+        // Changed parameter name
         return FadeTransition(
           opacity: _fadeAnimation,
           child: Column(
@@ -107,8 +115,9 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
                 SizedBox(height: screenSize.height * 0.02),
               ],
 
-              // Episodes list with download manager context
-              _buildEpisodesList(theme, screenSize, downloadManager),
+              // Episodes list with download provider context
+              _buildEpisodesList(theme, screenSize, downloadProvider),
+              // Updated parameter
             ],
           ),
         );
@@ -147,51 +156,71 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: _displayableSeasons.asMap().entries.map((entry) {
-            final index = entry.key;
-            final season = entry.value;
-            final isSelected = _selectedSeason.seasonNumber == season.seasonNumber;
+          children:
+              _displayableSeasons.asMap().entries.map((entry) {
+                final index = entry.key;
+                final season = entry.value;
+                final isSelected =
+                    _selectedSeason.seasonNumber == season.seasonNumber;
 
-            return Container(
-              margin: EdgeInsets.only(right: screenSize.width * 0.02),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _onSeasonChanged(season.seasonNumber),
-                  borderRadius: BorderRadius.circular(screenSize.width * 0.05),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: screenSize.width * 0.04,
-                      vertical: screenSize.height * 0.01,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(screenSize.width * 0.05),
-                    ),
-                    child: Text(
-                      'Season ${season.seasonNumber}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: (screenSize.width * 0.035).clamp(12.0, 16.0),
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected
-                            ? Colors.white
-                            : theme.colorScheme.onSurface.withOpacity(0.7),
+                return Container(
+                  margin: EdgeInsets.only(right: screenSize.width * 0.02),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _onSeasonChanged(season.seasonNumber),
+                      borderRadius: BorderRadius.circular(
+                        screenSize.width * 0.05,
+                      ),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: screenSize.width * 0.04,
+                          vertical: screenSize.height * 0.01,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.surfaceVariant
+                                      .withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(
+                            screenSize.width * 0.05,
+                          ),
+                        ),
+                        child: Text(
+                          'Season ${season.seasonNumber}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: (screenSize.width * 0.035).clamp(
+                              12.0,
+                              16.0,
+                            ),
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color:
+                                isSelected
+                                    ? Colors.white
+                                    : theme.colorScheme.onSurface.withOpacity(
+                                      0.7,
+                                    ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            );
-          }).toList(),
+                );
+              }).toList(),
         ),
       ),
     );
   }
 
-  Widget _buildEpisodesList(ThemeData theme, Size screenSize, DownloadManager downloadManager) {
+  Widget _buildEpisodesList(
+    ThemeData theme,
+    Size screenSize,
+    DownloadProvider downloadProvider,
+  ) {
+    // Updated parameter type
     if (_selectedSeason.episodes.isEmpty) {
       return Container(
         padding: EdgeInsets.all(screenSize.width * 0.08),
@@ -221,15 +250,16 @@ class _SeasonEpisodeSwitcherState extends State<SeasonEpisodeSwitcher>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _selectedSeason.episodes.length,
-      separatorBuilder: (context, index) => Container(
-        height: 1,
-        margin: EdgeInsets.symmetric(horizontal: screenSize.width * 0.04),
-        color: theme.colorScheme.outline.withOpacity(0.1),
-      ),
+      separatorBuilder:
+          (context, index) => Container(
+            height: 1,
+            margin: EdgeInsets.symmetric(horizontal: screenSize.width * 0.04),
+            color: theme.colorScheme.outline.withOpacity(0.1),
+          ),
       itemBuilder: (context, index) {
         final episode = _selectedSeason.episodes[index];
-        final bool isCurrentlyLoading = widget.loadingEpisode?.episodeNumber == episode.episodeNumber;
-
+        final bool isCurrentlyLoading =
+            widget.loadingEpisode?.episodeNumber == episode.episodeNumber;
 
         final String episodeKey = generateEpisodeKey(
           widget.mediaData!.tmdbId,

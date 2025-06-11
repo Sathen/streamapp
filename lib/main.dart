@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 // Routing
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/presentation/screens/search/search_screen.dart';
 import 'package:stream_flutter/screens/downloads_screen.dart';
 import 'package:stream_flutter/screens/online_media_details_screen.dart';
-import 'package:stream_flutter/screens/search/search_screen.dart';
 import 'package:stream_flutter/screens/tmdb_media_details_screen.dart';
 
 // Theme
@@ -43,48 +43,53 @@ class MyApp extends StatelessWidget {
         // Search Provider
         ChangeNotifierProvider<SearchProvider>(create: (_) => SearchProvider()),
 
-        // Download Provider
+        // Download Provider - Make sure this is the correct class name
         ChangeNotifierProvider<DownloadProvider>.value(value: downloadProvider),
       ],
-      child: MaterialApp.router(
-        title: 'Streaming App',
-        theme: AppTheme.darkTheme,
-        routerConfig: _router,
-        debugShowCheckedModeBanner: false,
-      ),
+      // Use builder to ensure providers are available to GoRouter
+      builder: (context, child) {
+        return MaterialApp.router(
+          title: 'Streaming App',
+          theme: AppTheme.darkTheme,
+          routerConfig: _buildRouter(context),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 
-  final GoRouter _router = GoRouter(
-    initialLocation: '/',
-    routes: [
-      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-      GoRoute(
-        path: '/search',
-        builder: (context, state) => const SearchScreen(),
-      ),
-      GoRoute(
-        path: '/downloads',
-        builder: (context, state) => const DownloadsScreen(),
-      ),
-      GoRoute(
-        path: '/media/:type/:id',
-        builder: (context, state) {
-          final type = state.pathParameters['type']!;
-          final id = int.parse(state.pathParameters['id']!);
-          return MediaDetailsScreen(
-            tmdbId: id,
-            type: type == 'movie' ? MediaType.movie : MediaType.tv,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/media/online',
-        builder: (context, state) {
-          final searchItem = state.extra as SearchItem;
-          return OnlineMediaDetailScreen(searchItem: searchItem);
-        },
-      ),
-    ],
-  );
+  GoRouter _buildRouter(BuildContext context) {
+    return GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+        GoRoute(
+          path: '/search',
+          builder: (context, state) => const SearchScreen(),
+        ),
+        GoRoute(
+          path: '/downloads',
+          builder: (context, state) => const DownloadsScreen(),
+        ),
+        GoRoute(
+          path: '/media/tmdb/:type/:id',
+          builder: (context, state) {
+            final type = state.pathParameters['type']!;
+            final id = int.parse(state.pathParameters['id']!);
+            return MediaDetailsScreen(
+              tmdbId: id,
+              type: type == 'movie' ? MediaType.movie : MediaType.tv,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/media/online',
+          builder: (context, state) {
+            final searchItem = state.extra as SearchItem;
+            return OnlineMediaDetailScreen(searchItem: searchItem);
+          },
+        ),
+      ],
+    );
+  }
 }

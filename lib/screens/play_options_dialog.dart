@@ -1,9 +1,10 @@
 import 'dart:io';
+
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/download_manager.dart';
+import '../presentation/providers/download/download_provider.dart';
 import '../screens/video_player_screen.dart';
 
 class PlayOptionsDialog extends StatefulWidget {
@@ -335,7 +336,7 @@ class _PlayOptionsDialogState extends State<PlayOptionsDialog>
 
   void _handleDownload() {
     try {
-      final downloadManager = context.read<DownloadManager>();
+      final downloadManager = context.read<DownloadProvider>();
 
       downloadManager.downloadEpisode(
         episodeKey: widget.episodeKey,

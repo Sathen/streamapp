@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/models/generic_media_details.dart';
+import '../../presentation/providers/download/download_provider.dart';
 import '../../providers/download_manager.dart';
 import '../../screens/video_player_screen.dart'; // Add this import
 
@@ -33,7 +34,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   bool _isDownloadingFile = false;
   double _downloadProgress = 0.0;
   bool _isDownloaded = false;
-  DownloadManager? _downloadManager;
+  DownloadProvider? _downloadManager;
 
   @override
   void initState() {
@@ -50,7 +51,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   }
 
   void _setupDownloadListener() {
-    _downloadManager = context.read<DownloadManager>();
+    _downloadManager = context.read<DownloadProvider>();
     _updateDownloadState();
 
     // Add listener for real-time updates
