@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models/tmdb_models.dart';
 import '../../../providers/media_details/media_details_provider.dart';
 import '../../../widgets/common/loading/loading_indicator.dart';
@@ -85,9 +84,8 @@ class MediaDetailsContent extends StatelessWidget {
             isOnlineMedia: isOnlineMedia,
           ),
 
-        // TV Seasons Section
-        if (_shouldShowSeasonsSection())
-          TvSeasonsSection(provider: provider, tmdbId: tmdbId!),
+        // TV Seasons Section - Extract tmdbId from GenericMediaData
+        if (_shouldShowSeasonsSection()) _buildSeasonsSection(),
 
         const SizedBox(height: 16),
 
@@ -100,11 +98,8 @@ class MediaDetailsContent extends StatelessWidget {
     );
   }
 
-  bool _shouldShowPlaySection() {
-    if (isOnlineMedia) {
-      return provider.onlineMediaData?.seasons.isEmpty ?? true;
-    }
-    return mediaType == MediaType.movie;
+  Widget _buildSeasonsSection() {
+      return TvSeasonsSection(provider: provider, isOnlineMedia: isOnlineMedia );
   }
 
   bool _shouldShowSeasonsSection() {
@@ -122,5 +117,12 @@ class MediaDetailsContent extends StatelessWidget {
     } else if (tmdbId != null && mediaType != null) {
       provider.loadTmdbMediaDetails(tmdbId!, mediaType!);
     }
+  }
+
+  bool _shouldShowPlaySection() {
+    if (isOnlineMedia) {
+      return provider.onlineMediaData?.seasons.isEmpty ?? true;
+    }
+    return mediaType == MediaType.movie;
   }
 }

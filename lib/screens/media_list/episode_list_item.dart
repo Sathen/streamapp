@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -156,9 +155,10 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: _isDownloaded
-                    ? theme.colorScheme.primary.withOpacity(0.4)
-                    : theme.colorScheme.outline.withOpacity(0.2),
+                color:
+                    _isDownloaded
+                        ? theme.colorScheme.primary.withOpacity(0.4)
+                        : theme.colorScheme.outline.withOpacity(0.2),
                 width: _isDownloaded ? 2 : 1,
               ),
               boxShadow: [
@@ -182,9 +182,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                 _buildThumbnail(theme),
                 const SizedBox(width: 16),
                 // Episode info - flexible expansion
-                Expanded(
-                  child: _buildEpisodeInfo(theme),
-                ),
+                Expanded(child: _buildEpisodeInfo(theme)),
                 const SizedBox(width: 12),
                 // Action button - maintains consistent size
                 _buildActionButton(theme),
@@ -209,9 +207,10 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _isDownloaded
-              ? theme.colorScheme.primary.withOpacity(0.4)
-              : theme.colorScheme.outline.withOpacity(0.2),
+          color:
+              _isDownloaded
+                  ? theme.colorScheme.primary.withOpacity(0.4)
+                  : theme.colorScheme.outline.withOpacity(0.2),
           width: _isDownloaded ? 2 : 1,
         ),
       ),
@@ -221,17 +220,21 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
           children: [
             AspectRatio(
               aspectRatio: 16 / 9, // Maintain proper aspect ratio
-              child: widget.episode.stillPath != null && widget.episode.stillPath!.isNotEmpty
-                  ? Image.network(
-                'https://image.tmdb.org/t/p/w300${widget.episode.stillPath!}',
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return _buildPlaceholder(theme, isLoading: true);
-                },
-                errorBuilder: (context, error, stackTrace) => _buildPlaceholder(theme),
-              )
-                  : _buildPlaceholder(theme),
+              child:
+                  widget.episode.stillPath != null &&
+                          widget.episode.stillPath!.isNotEmpty
+                      ? Image.network(
+                        'https://image.tmdb.org/t/p/w300${widget.episode.stillPath!}',
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return _buildPlaceholder(theme, isLoading: true);
+                        },
+                        errorBuilder:
+                            (context, error, stackTrace) =>
+                                _buildPlaceholder(theme),
+                      )
+                      : _buildPlaceholder(theme),
             ),
             // Downloaded indicator overlay
             if (_isDownloaded)
@@ -277,22 +280,23 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         ),
       ),
       child: Center(
-        child: isLoading
-            ? SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              theme.colorScheme.primary,
-            ),
-          ),
-        )
-            : Icon(
-          Icons.movie_creation_outlined,
-          size: 24,
-          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-        ),
+        child:
+            isLoading
+                ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.primary,
+                    ),
+                  ),
+                )
+                : Icon(
+                  Icons.movie_creation_outlined,
+                  size: 24,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                ),
       ),
     );
   }
@@ -408,7 +412,8 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
           ],
         ),
       );
-    } else if (widget.episode.airDate != null && widget.episode.airDate!.isNotEmpty) {
+    } else if (widget.episode.airDate != null &&
+        widget.episode.airDate!.isNotEmpty) {
       content = Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
@@ -446,17 +451,17 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
     // Wrap in consistent container to prevent layout jumps
     return SizedBox(
       height: 32, // Consistent height for status area
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: content,
-      ),
+      child: Align(alignment: Alignment.centerLeft, child: content),
     );
   }
 
   Widget _buildActionButton(ThemeData theme) {
     // Use responsive sizing for action button
     final buttonSize = MediaQuery.of(context).size.width * 0.12;
-    final clampedSize = buttonSize.clamp(44.0, 56.0); // Minimum 44px for accessibility, max 56px
+    final clampedSize = buttonSize.clamp(
+      44.0,
+      56.0,
+    ); // Minimum 44px for accessibility, max 56px
 
     Widget buttonContent;
 
@@ -466,9 +471,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         height: clampedSize * 0.4,
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(
-            theme.colorScheme.primary,
-          ),
+          valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
         ),
       );
     } else if (_isDownloadingFile) {
@@ -482,9 +485,10 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         _isDownloaded
             ? Icons.play_circle_filled_rounded
             : Icons.play_arrow_rounded,
-        color: _isDownloaded
-            ? theme.colorScheme.primary
-            : theme.colorScheme.secondary,
+        color:
+            _isDownloaded
+                ? theme.colorScheme.primary
+                : theme.colorScheme.secondary,
         size: clampedSize * 0.6,
       );
     }
@@ -494,46 +498,48 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
       height: clampedSize,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: widget.isCurrentlyLoading
-              ? [
-            theme.colorScheme.surfaceVariant.withOpacity(0.5),
-            theme.colorScheme.surfaceVariant.withOpacity(0.2),
-          ]
-              : _isDownloadingFile
-              ? [
-            theme.colorScheme.error.withOpacity(0.2),
-            theme.colorScheme.error.withOpacity(0.1),
-          ]
-              : _isDownloaded
-              ? [
-            theme.colorScheme.primary.withOpacity(0.3),
-            theme.colorScheme.primary.withOpacity(0.1),
-          ]
-              : [
-            theme.colorScheme.secondary.withOpacity(0.2),
-            theme.colorScheme.secondary.withOpacity(0.1),
-          ],
+          colors:
+              widget.isCurrentlyLoading
+                  ? [
+                    theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                    theme.colorScheme.surfaceVariant.withOpacity(0.2),
+                  ]
+                  : _isDownloadingFile
+                  ? [
+                    theme.colorScheme.error.withOpacity(0.2),
+                    theme.colorScheme.error.withOpacity(0.1),
+                  ]
+                  : _isDownloaded
+                  ? [
+                    theme.colorScheme.primary.withOpacity(0.3),
+                    theme.colorScheme.primary.withOpacity(0.1),
+                  ]
+                  : [
+                    theme.colorScheme.secondary.withOpacity(0.2),
+                    theme.colorScheme.secondary.withOpacity(0.1),
+                  ],
         ),
         borderRadius: BorderRadius.circular(clampedSize / 2),
         border: Border.all(
-          color: widget.isCurrentlyLoading
-              ? theme.colorScheme.outline.withOpacity(0.3)
-              : _isDownloadingFile
-              ? theme.colorScheme.error.withOpacity(0.3)
-              : _isDownloaded
-              ? theme.colorScheme.primary.withOpacity(0.5)
-              : theme.colorScheme.secondary.withOpacity(0.4),
+          color:
+              widget.isCurrentlyLoading
+                  ? theme.colorScheme.outline.withOpacity(0.3)
+                  : _isDownloadingFile
+                  ? theme.colorScheme.error.withOpacity(0.3)
+                  : _isDownloaded
+                  ? theme.colorScheme.primary.withOpacity(0.5)
+                  : theme.colorScheme.secondary.withOpacity(0.4),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: (widget.isCurrentlyLoading
-                ? theme.colorScheme.shadow
-                : _isDownloadingFile
-                ? theme.colorScheme.error
-                : _isDownloaded
-                ? theme.colorScheme.primary
-                : theme.colorScheme.secondary)
+                    ? theme.colorScheme.shadow
+                    : _isDownloadingFile
+                    ? theme.colorScheme.error
+                    : _isDownloaded
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.secondary)
                 .withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
@@ -544,18 +550,19 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(clampedSize / 2),
-          onTap: widget.isCurrentlyLoading || _isPressed
-              ? null
-              : _isDownloadingFile
-              ? () {
-            _downloadManager?.cancelDownload(widget.episodeKey);
-            setState(() {
-              _isDownloadingFile = false;
-              _downloadProgress = 0.0;
-            });
-            _showCancelSnackbar(context, theme);
-          }
-              : _handleTap,
+          onTap:
+              widget.isCurrentlyLoading || _isPressed
+                  ? null
+                  : _isDownloadingFile
+                  ? () {
+                    _downloadManager?.cancelDownload(widget.episodeKey);
+                    setState(() {
+                      _isDownloadingFile = false;
+                      _downloadProgress = 0.0;
+                    });
+                    _showCancelSnackbar(context, theme);
+                  }
+                  : _handleTap,
           child: Center(child: buttonContent),
         ),
       ),
@@ -610,9 +617,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: theme.colorScheme.outline.withOpacity(0.2),
-          ),
+          side: BorderSide(color: theme.colorScheme.outline.withOpacity(0.2)),
         ),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),

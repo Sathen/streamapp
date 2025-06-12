@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
 
+import '../../../core/enums/display_category.dart';
 import '../../../data/datasources/remote/services/media_service.dart';
 import '../../../data/models/models/media_item.dart';
 import '../../../data/models/models/tmdb_models.dart';
 import '../base/base_provider.dart';
-
-enum DisplayCategory { movies, tv }
 
 class MediaProvider extends BaseProvider {
   final MediaService _mediaService = MediaService(null, null, null);

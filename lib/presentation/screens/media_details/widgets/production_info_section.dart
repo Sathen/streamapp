@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models/tmdb_models.dart';
-import '../../../../screens/chip_list.dart';
+import '../../../widgets/common/misc/chip_list.dart';
 
 class ProductionInfoSection extends StatelessWidget {
   final TmdbMediaDetails mediaData;

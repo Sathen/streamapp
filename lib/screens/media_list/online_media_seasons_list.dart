@@ -1,35 +1,33 @@
-// tv_seasons_list.dart
+// lib/screens/widgets/online_media_seasons_list.dart
 import 'package:flutter/material.dart';
-import 'package:stream_flutter/screens/medi_list/season_episode_switcher.dart';
+import 'package:stream_flutter/screens/media_list/season_episode_switcher.dart';
+
 import '../../data/models/models/generic_media_details.dart';
-import '../../data/models/models/tmdb_models.dart';
+import '../../data/models/models/online_media_details_entity.dart';
 
-class TVSeasonsList extends StatefulWidget {
-  final List<TVSeasonDetails> seasonDetails;
-  final int tmdbId;
-  final TVEpisode? loadingEpisode;
-  final TmdbMediaDetails? mediaData;
+class OnlineMediaSeasonsList extends StatefulWidget {
+  final OnlineMediaDetailsEntity mediaDetails;
+  final GenericEpisode? loadingEpisode;
   final void Function(
-      TVSeasonDetails season,
-      TVEpisode episode,
-      String? embedUrl,
-      String? contentTitle,
-      ) onEpisodeTap;
+    OnlineMediaDetailsSeasons season,
+    OnlineMediaDetailsEpisode episode,
+    String? embedUrl,
+    String? contentTitle,
+  )
+  onEpisodeTap;
 
-  const TVSeasonsList({
+  const OnlineMediaSeasonsList({
     super.key,
-    required this.seasonDetails,
-    required this.tmdbId,
+    required this.mediaDetails,
     required this.loadingEpisode,
-    required this.mediaData,
     required this.onEpisodeTap,
   });
 
   @override
-  State<TVSeasonsList> createState() => _TVSeasonsListState();
+  State<OnlineMediaSeasonsList> createState() => _OnlineMediaSeasonsListState();
 }
 
-class _TVSeasonsListState extends State<TVSeasonsList>
+class _OnlineMediaSeasonsListState extends State<OnlineMediaSeasonsList>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -56,10 +54,7 @@ class _TVSeasonsListState extends State<TVSeasonsList>
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     _fadeController.forward();
   }
@@ -74,7 +69,7 @@ class _TVSeasonsListState extends State<TVSeasonsList>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (widget.seasonDetails.isEmpty) {
+    if (widget.mediaDetails.seasons.isEmpty) {
       return FadeTransition(
         opacity: _fadeAnimation,
         child: _buildEmptyState(theme),
@@ -108,7 +103,7 @@ class _TVSeasonsListState extends State<TVSeasonsList>
           ),
           SizedBox(height: _isPortraitPhone ? 8 : 12),
           Text(
-            "This TV show doesn't have any episodes available.",
+            "This content doesn't have any episodes to stream.",
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.5),
             ),
@@ -120,10 +115,14 @@ class _TVSeasonsListState extends State<TVSeasonsList>
   }
 
   Widget _buildSeasonsContent(ThemeData theme) {
-    final List<GenericSeason> genericSeasons =
-    widget.seasonDetails.cast<GenericSeason>().toList();
+    // Cast to the generic types that SeasonEpisodeSwitcher expects
+    final List<OnlineMediaDetailsSeasons> genericSeasons =
+        widget.mediaDetails.seasons.cast<OnlineMediaDetailsSeasons>().toList();
     final GenericEpisode? genericLoadingEpisode = widget.loadingEpisode;
-    final GenericMediaData? genericMediaData = widget.mediaData;
+    final OnlineMediaDetailsEntity genericMediaData = widget.mediaDetails;
+
+    // Generate a more robust media ID
+    final String mediaIdForSwitcher = _generateMediaId();
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -140,7 +139,7 @@ class _TVSeasonsListState extends State<TVSeasonsList>
           // Seasons content
           SeasonEpisodeSwitcher(
             allSeasons: genericSeasons,
-            mediaId: widget.tmdbId.toString(),
+            mediaId: mediaIdForSwitcher,
             mediaData: genericMediaData,
             loadingEpisode: genericLoadingEpisode,
             onEpisodeTap: _handleEpisodeTap,
@@ -197,27 +196,35 @@ class _TVSeasonsListState extends State<TVSeasonsList>
   }
 
   int _getTotalEpisodes() {
-    return widget.seasonDetails
-        .fold<int>(0, (sum, season) => sum + season.episodes.length);
+    return widget.mediaDetails.seasons.fold<int>(
+      0,
+      (sum, season) => sum + season.episodes.length,
+    );
+  }
+
+  String _generateMediaId() {
+    // Create a more robust media ID using title and hashCode
+    final baseId = widget.mediaDetails.title.replaceAll(
+      RegExp(r'[^a-zA-Z0-9]'),
+      '_',
+    );
+    final hashSuffix = widget.mediaDetails.hashCode.abs().toString();
+    return '${baseId}_$hashSuffix';
   }
 
   void _handleEpisodeTap(
-      GenericSeason season,
-      GenericEpisode episode,
-      String? embedUrl,
-      String? contentTitle,
-      ) {
-    if (season is TVSeasonDetails && episode is TVEpisode) {
-      widget.onEpisodeTap(
-        season,
-        episode,
-        widget.mediaData?.title,
-        widget.mediaData?.originalTitle,
-      );
+    GenericSeason season,
+    GenericEpisode episode,
+    String? embedUrl,
+    String? contentTitle,
+  ) {
+    if (season is OnlineMediaDetailsSeasons &&
+        episode is OnlineMediaDetailsEpisode) {
+      widget.onEpisodeTap(season, episode, embedUrl, contentTitle);
     } else {
       // Enhanced error handling with user feedback
       debugPrint(
-        "Error: Could not cast GenericSeason/GenericEpisode back to TMDB specific types in TVSeasonsList.",
+        "Error: Could not cast GenericSeason/GenericEpisode back to Online Media specific types in OnlineMediaSeasonsList.",
       );
 
       // Show simple error message

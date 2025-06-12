@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+
 // Routing
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/presentation/providers/media_details/media_details_provider.dart';
 import 'package:stream_flutter/presentation/screens/downloads/downloads_screen.dart';
+import 'package:stream_flutter/presentation/screens/media_details/online_media_details_screen.dart';
+import 'package:stream_flutter/presentation/screens/media_details/tmdb_media_details_screen.dart';
 import 'package:stream_flutter/presentation/screens/search/search_screen.dart';
-import 'package:stream_flutter/screens/online_media_details_screen.dart';
-import 'package:stream_flutter/screens/tmdb_media_details_screen.dart';
 
 // Theme
 import 'core/theme/app_theme.dart';
+
 // New providers
 import 'data/models/models/search_result.dart';
 import 'data/models/models/tmdb_models.dart';
 import 'presentation/providers/download/download_provider.dart';
 import 'presentation/providers/media/media_provider.dart';
 import 'presentation/providers/search/search_provider.dart';
+
 // Screens
 import 'presentation/screens/home/home_screen.dart';
 
@@ -39,6 +43,9 @@ class MyApp extends StatelessWidget {
       providers: [
         // Media Provider
         ChangeNotifierProvider<MediaProvider>(create: (_) => MediaProvider()),
+
+        // Media Details Provider - ADD THIS!
+        ChangeNotifierProvider<MediaDetailsProvider>(create: (_) => MediaDetailsProvider()),
 
         // Search Provider
         ChangeNotifierProvider<SearchProvider>(create: (_) => SearchProvider()),
@@ -76,7 +83,7 @@ class MyApp extends StatelessWidget {
           builder: (context, state) {
             final type = state.pathParameters['type']!;
             final id = int.parse(state.pathParameters['id']!);
-            return MediaDetailsScreen(
+            return TmdbMediaDetailsScreen(
               tmdbId: id,
               type: type == 'movie' ? MediaType.movie : MediaType.tv,
             );
@@ -86,7 +93,7 @@ class MyApp extends StatelessWidget {
           path: '/media/online',
           builder: (context, state) {
             final searchItem = state.extra as SearchItem;
-            return OnlineMediaDetailScreen(searchItem: searchItem);
+            return OnlineMediaDetailsScreen(searchItem: searchItem);
           },
         ),
       ],

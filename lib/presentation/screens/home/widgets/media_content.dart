@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/enums/display_category.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../screens/media_section.dart';
+import 'media_section.dart';
 import '../../../providers/media/media_provider.dart';
 
 class MediaContent extends StatelessWidget {

@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../screens/medi_list/tmdb_media_seasons_list.dart';
+import '../../../../screens/media_list/online_media_seasons_list.dart';
+import '../../../../screens/media_list/tmdb_media_seasons_list.dart';
 import '../../../providers/media_details/media_details_provider.dart';
 
 class TvSeasonsSection extends StatelessWidget {
   final MediaDetailsProvider provider;
-  final int tmdbId;
+  final bool isOnlineMedia;
 
   const TvSeasonsSection({
     super.key,
     required this.provider,
-    required this.tmdbId,
+    required this.isOnlineMedia,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (provider.seasonDetails == null || provider.seasonDetails!.isEmpty) {
+    var stringTmdb = provider.getTmdbId(isOnlineMedia);
+
+    if (stringTmdb == null || !provider.hasSeasons(isOnlineMedia)) {
       return const SizedBox.shrink();
     }
 
@@ -43,34 +46,48 @@ class TvSeasonsSection extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: TVSeasonsList(
-          seasonDetails: provider.seasonDetails!,
-          tmdbId: tmdbId,
-          loadingEpisode: provider.loadingEpisode,
-          mediaData: provider.mediaData,
-          onEpisodeTap: (season, episode, title, originalTitle) {
-            _handleEpisodeTap(context, season, episode, title, originalTitle);
-          },
-        ),
+        child: buildSeasonsList(context),
       ),
+    );
+  }
+
+  Widget buildSeasonsList(BuildContext context) {
+    if (isOnlineMedia) {
+      return OnlineMediaSeasonsList(
+        mediaDetails: provider.onlineMediaData!,
+        loadingEpisode: provider.loadingEpisode,
+        onEpisodeTap: (season, episode, embedUrl, contentTitle) {
+          _handleEpisodeTap(context, season, episode, embedUrl, contentTitle);
+        },
+      );
+    }
+
+    return TVSeasonsList(
+      seasonDetails: provider.seasonDetails,
+      tmdbId: int.parse(provider.getTmdbId(isOnlineMedia)!),
+      loadingEpisode: provider.loadingEpisode,
+      mediaData: provider.mediaData,
+      onEpisodeTap: (season, episode, embedUrl, contentTitle) {
+        _handleEpisodeTap(context, season, episode, embedUrl, contentTitle);
+      },
     );
   }
 
   void _handleEpisodeTap(
     BuildContext context,
-    season,
-    episode,
-    String? title,
-    String? originalTitle,
-  ) {
-    provider.setEpisodeLoading(episode);
-
-    // Handle episode playback logic here
-    // This would integrate with your existing episode tap handling
-
-    // Reset loading state after handling
-    Future.delayed(const Duration(seconds: 2), () {
-      provider.setEpisodeLoading(null);
-    });
+    dynamic season,
+    dynamic episode,
+    String? embedUrl,
+    String? contentTitle,
+  ) async {
+    // Use the provider's new handleEpisodeTap method
+    await provider.handleEpisodeTap(
+      context: context,
+      season: season,
+      episode: episode,
+      tmdbId: int.parse(provider.getTmdbId(isOnlineMedia)!),
+      embedUrl: embedUrl,
+      contentTitle: contentTitle,
+    );
   }
 }
