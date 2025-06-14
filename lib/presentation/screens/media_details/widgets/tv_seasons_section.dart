@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../screens/media_list/online_media_seasons_list.dart';
-import '../../../../screens/media_list/tmdb_media_seasons_list.dart';
+import 'online_media_seasons_list.dart';
+import 'tmdb_media_seasons_list.dart';
 import '../../../providers/media_details/media_details_provider.dart';
 
 class TvSeasonsSection extends StatelessWidget {

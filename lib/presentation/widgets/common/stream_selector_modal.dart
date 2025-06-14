@@ -1,6 +1,6 @@
-// stream_selector_modal.dart
 import 'package:flutter/material.dart';
-import '../data/models/models/video_streams.dart';
+
+import '../../../data/models/models/video_streams.dart';
 
 class StreamSelectorModal extends StatefulWidget {
   final String itemTitle;

@@ -4,8 +4,8 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../presentation/providers/download/download_provider.dart';
-import '../screens/video_player_screen.dart';
+import '../../../providers/download/download_provider.dart';
+import '../../../screens/video_player/video_player_screen.dart';
 
 class PlayOptionsDialog extends StatefulWidget {
   final String streamUrl;

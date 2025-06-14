@@ -1,4 +1,3 @@
-// chip_list.dart
 import 'package:flutter/material.dart';
 
 class ChipList extends StatefulWidget {

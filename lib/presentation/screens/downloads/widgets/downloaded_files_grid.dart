@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../screens/video_player_screen.dart';
+import '../../video_player/video_player_screen.dart';
 import '../../../providers/download/download_provider.dart';
 
 class DownloadedFilesGrid extends StatelessWidget {

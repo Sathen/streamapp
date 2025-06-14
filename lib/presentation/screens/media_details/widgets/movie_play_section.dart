@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/datasources/remote/client/online_server_api.dart';
-import '../../../../screens/play_options_dialog.dart';
-import '../../../../util/errors.dart';
+import '../../../widgets/common/dialogs/play_options_dialog.dart';
+import '../../../../core/utils/errors.dart';
 import '../../../providers/download/download_provider.dart';
 import '../../../providers/media_details/media_details_provider.dart';
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../data/models/models/generic_media_details.dart';
-import '../../presentation/providers/download/download_provider.dart'; // Updated import
-import 'episode_list_item.dart';
+import '../../../data/models/models/generic_media_details.dart';
+import '../../providers/download/download_provider.dart';
+import 'list/episode_list_item.dart';
 
 class SeasonEpisodeSwitcher extends StatefulWidget {
   final List<GenericSeason> allSeasons;

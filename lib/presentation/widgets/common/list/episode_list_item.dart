@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../data/models/models/generic_media_details.dart';
-import '../../presentation/providers/download/download_provider.dart';
-import '../../screens/video_player_screen.dart'; // Add this import
+import '../../../../data/models/models/generic_media_details.dart';
+import '../../../providers/download/download_provider.dart';
+import '../../../screens/video_player/video_player_screen.dart'; // Add this import
 
 class EpisodeListItem extends StatefulWidget {
   final GenericEpisode episode;

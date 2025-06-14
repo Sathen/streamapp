@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../screens/video_player_screen.dart';
-import '../../../../util/errors.dart';
+import '../../video_player/video_player_screen.dart';
+import '../../../../core/utils/errors.dart';
 import '../../../providers/download/download_provider.dart';
 import '../../../widgets/common/dialogs/confirmation_dialog.dart';
 

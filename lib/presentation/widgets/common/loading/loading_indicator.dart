@@ -11,7 +11,7 @@ class LoadingIndicator extends StatefulWidget {
   const LoadingIndicator({
     super.key,
     this.message,
-    this.size = 48,
+    this.size = 0,
     this.color,
     this.showMessage = true,
   });

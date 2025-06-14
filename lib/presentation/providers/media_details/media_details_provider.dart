@@ -7,9 +7,9 @@ import '../../../data/models/models/online_media_details_entity.dart';
 import '../../../data/models/models/search_result.dart';
 import '../../../data/models/models/tmdb_models.dart';
 import '../../../data/models/models/video_streams.dart';
-import '../../../screens/play_options_dialog.dart';
-import '../../../screens/stream_selector_modal.dart';
-import '../../../util/errors.dart';
+import '../../widgets/common/dialogs/play_options_dialog.dart';
+import '../../widgets/common/stream_selector_modal.dart';
+import '../../../core/utils/errors.dart';
 import '../base/base_provider.dart';
 import '../download/download_provider.dart';
 
