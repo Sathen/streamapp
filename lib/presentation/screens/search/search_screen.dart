@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/presentation/providers/search/search_provider.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../providers/search/search_provider.dart';
+import '../../../core/utils/errors.dart';
 import 'widgets/search_app_bar.dart';
 import 'widgets/search_content.dart';
 
@@ -53,7 +54,7 @@ class _SearchScreenState extends State<SearchScreen> {
               SearchAppBar(
                 controller: _searchController,
                 focusNode: _searchFocusNode,
-                onBackPressed: () => context.push('/'),
+                onBackPressed: () => context.go('/'),
                 onSearch: (query) => _performSearch(query),
                 onClear: () => _clearSearch(),
               ),
@@ -71,10 +72,17 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  void _performSearch(String query) {
+  Future<void> _performSearch(String query) async {
     if (query.trim().isNotEmpty) {
       _searchFocusNode.unfocus();
-      context.read<SearchProvider>().search(query.trim());
+
+      final result = await context.read<SearchProvider>().search(query.trim());
+
+      if (mounted) {
+        result.fold((searchResult) {}, (error, exception) {
+          showErrorSnackbar(context, error);
+        });
+      }
     }
   }
 
@@ -83,8 +91,8 @@ class _SearchScreenState extends State<SearchScreen> {
     context.read<SearchProvider>().clearResults();
   }
 
-  void _selectRecentSearch(String query) {
+  Future<void> _selectRecentSearch(String query) async {
     _searchController.text = query;
-    _performSearch(query);
+    await _performSearch(query);
   }
 }

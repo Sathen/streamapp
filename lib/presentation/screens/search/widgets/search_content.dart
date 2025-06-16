@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/errors.dart';
 import '../../../providers/search/search_provider.dart';
 import 'recent_searches.dart';
 import 'search_empty_state.dart';
@@ -33,7 +34,9 @@ class SearchContent extends StatelessWidget {
           return RecentSearches(
             recentSearches: searchProvider.recentSearches,
             onSearchTap: onRecentSearchTap,
-            onClearAll: () => searchProvider.clearRecentSearches(),
+            onClearAll: () => _clearRecentSearches(context, searchProvider),
+            onRemoveSearch:
+                (query) => _removeRecentSearch(context, searchProvider, query),
           );
         }
 
@@ -174,5 +177,42 @@ class SearchContent extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _clearRecentSearches(
+    BuildContext context,
+    SearchProvider provider,
+  ) async {
+    final result = await provider.clearRecentSearches();
+
+    if (context.mounted) {
+      result.fold(
+        (data) {
+          // Success - no message needed, UI update shows success
+        },
+        (error, exception) {
+          showErrorSnackbar(context, 'Failed to clear searches: $error');
+        },
+      );
+    }
+  }
+
+  Future<void> _removeRecentSearch(
+    BuildContext context,
+    SearchProvider provider,
+    String query,
+  ) async {
+    final result = await provider.removeRecentSearch(query);
+
+    if (context.mounted) {
+      result.fold(
+        (data) {
+          // Success - no message needed, UI update shows success
+        },
+        (error, exception) {
+          showErrorSnackbar(context, 'Failed to remove search: $error');
+        },
+      );
+    }
   }
 }

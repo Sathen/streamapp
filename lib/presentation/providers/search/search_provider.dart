@@ -1,24 +1,34 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../core/di/service_locator.dart';
+import '../../../core/utils/logger.dart';
+import '../../../core/utils/result.dart';
 import '../../../data/datasources/remote/client/online_server_api.dart';
 import '../../../data/models/models/search_result.dart';
-import '../base/base_provider.dart';
+import '../base/enhanced_base_provider.dart';
 
-class SearchProvider extends BaseProvider {
-  final OnlineServerApi _serverApi = get<OnlineServerApi>();
+class SearchProvider extends EnhancedBaseProvider {
+  late final OnlineServerApi _serverApi;
+  late final SharedPreferences _prefs;
+  late final AppLogger _logger;
 
   List<String> _recentSearches = [];
   SearchResult _results = SearchResult();
   String _currentQuery = '';
 
   SearchProvider() {
+    _serverApi = get<OnlineServerApi>();
+    _prefs = get<SharedPreferences>();
+    _logger = get<AppLogger>();
+
+    _logger.info('SearchProvider initialized');
     _loadRecentSearches();
   }
 
   // Getters
-  List<String> get recentSearches => _recentSearches;
+  List<String> get recentSearches => List.unmodifiable(_recentSearches);
 
   SearchResult get results => _results;
 
@@ -28,57 +38,58 @@ class SearchProvider extends BaseProvider {
 
   bool get hasRecentSearches => _recentSearches.isNotEmpty;
 
-  Future<void> _loadRecentSearches() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final searchesJson = prefs.getString('recent_searches');
+  /// Load recent searches from storage
+  Future<Result<List<String>>> _loadRecentSearches() async {
+    return executeOperation(() async {
+      final searchesJson = _prefs.getString('recent_searches');
       if (searchesJson != null) {
         final List<dynamic> searchesList = json.decode(searchesJson);
         _recentSearches = searchesList.cast<String>();
         safeNotifyListeners();
+        return _recentSearches;
       }
-    } catch (e) {
-      debugPrint('Error loading recent searches: $e');
-    }
+      return <String>[];
+    }, errorPrefix: 'Failed to load recent searches');
   }
 
-  Future<void> _saveRecentSearches() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
+  /// Save recent searches to storage
+  Future<Result<void>> _saveRecentSearches() async {
+    return executeOperation(() async {
       final searchesJson = json.encode(_recentSearches);
-      await prefs.setString('recent_searches', searchesJson);
-    } catch (e) {
-      debugPrint('Error saving recent searches: $e');
-    }
+      await _prefs.setString('recent_searches', searchesJson);
+    }, errorPrefix: 'Failed to save recent searches');
   }
 
-  Future<void> search(String query) async {
+  /// Perform search with proper error handling
+  Future<Result<SearchResult>> search(String query) async {
     if (query.trim().isEmpty) {
       clearResults();
-      return;
+      return success(SearchResult());
     }
 
     _currentQuery = query.trim();
+    _logger.info('Searching for: $_currentQuery');
 
-    try {
-      setLoading(true);
-      clearError();
+    return executeOperation(
+          () async {
+        // Add to recent searches (non-blocking)
+        await _addToRecentSearches(_currentQuery);
 
-      // Add to recent searches
-      await _addToRecentSearches(query.trim());
+        // Perform search
+        final result = await _serverApi.search(_currentQuery);
+        _results = result;
 
-      // Perform search
-      _results = await _serverApi.search(query.trim());
-    } catch (e) {
-      setError('Search failed: ${e.toString()}');
-      _results = SearchResult(); // Empty results on error
-    } finally {
-      setLoading(false);
-    }
+        _logger.info('Search completed: ${result.items.length} results found');
+        safeNotifyListeners();
+        return result;
+      },
+      errorPrefix: 'Search failed',
+    );
   }
 
-  Future<void> _addToRecentSearches(String query) async {
-    try {
+  /// Add query to recent searches
+  Future<Result<void>> _addToRecentSearches(String query) async {
+    return executeOperation(() async {
       // Remove if already exists
       _recentSearches.remove(query);
 
@@ -91,32 +102,59 @@ class SearchProvider extends BaseProvider {
       }
 
       // Save to storage
-      await _saveRecentSearches();
-      safeNotifyListeners();
-    } catch (e) {
-      debugPrint('Error adding to recent searches: $e');
-    }
+      final saveResult = await _saveRecentSearches();
+      if (saveResult.isSuccess) {
+        _logger.debug('Added to recent searches: $query');
+        safeNotifyListeners();
+      }
+    }, errorPrefix: 'Failed to add to recent searches');
   }
 
-  Future<void> selectRecentSearch(String query) async {
-    await search(query);
+  /// Select and search from recent searches
+  Future<Result<SearchResult>> selectRecentSearch(String query) async {
+    return search(query);
   }
 
-  Future<void> clearRecentSearches() async {
-    try {
+  /// Clear all recent searches
+  Future<Result<void>> clearRecentSearches() async {
+    return executeOperation(() async {
       _recentSearches.clear();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('recent_searches');
+      await _prefs.remove('recent_searches');
       safeNotifyListeners();
-    } catch (e) {
-      setError('Failed to clear recent searches');
-    }
+    }, errorPrefix: 'Failed to clear recent searches');
   }
 
+  /// Clear current search results
   void clearResults() {
     _results = SearchResult();
     _currentQuery = '';
     clearError();
     safeNotifyListeners();
+  }
+
+  /// Get search suggestions based on query
+  List<String> getSearchSuggestions(String query) {
+    if (query.trim().isEmpty) return _recentSearches.take(5).toList();
+
+    return _recentSearches
+        .where((search) => search.toLowerCase().contains(query.toLowerCase()))
+        .take(5)
+        .toList();
+  }
+
+  /// Check if a query exists in recent searches
+  bool isRecentSearch(String query) {
+    return _recentSearches.contains(query);
+  }
+
+  /// Remove specific search from recent searches
+  Future<Result<void>> removeRecentSearch(String query) async {
+    return executeOperation(() async {
+      _recentSearches.remove(query);
+      final saveResult = await _saveRecentSearches();
+      if (saveResult.isSuccess) {
+        safeNotifyListeners();
+      }
+    }, errorPrefix: 'Failed to remove recent search');
   }
 }

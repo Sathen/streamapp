@@ -34,16 +34,16 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<MediaProvider>(
-          create: (_) => get<MediaProvider>(),
+          create: (_) => MediaProvider(),
         ),
         ChangeNotifierProvider<SearchProvider>(
-          create: (_) => get<SearchProvider>(),
+          create: (_) => SearchProvider(),
         ),
         ChangeNotifierProvider<MediaDetailsProvider>(
-          create: (_) => get<MediaDetailsProvider>(),
+          create: (_) => MediaDetailsProvider(),
         ),
         ChangeNotifierProvider<DownloadProvider>(
-          create: (_) => get<DownloadProvider>(), // This one is singleton
+          create: (_) => DownloadProvider(), // This one is singleton
         ),
       ],
       child: MaterialApp.router(

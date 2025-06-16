@@ -6,12 +6,15 @@ class RecentSearches extends StatelessWidget {
   final List<String> recentSearches;
   final Function(String) onSearchTap;
   final VoidCallback onClearAll;
+  final Function(String)?
+  onRemoveSearch; // New callback for removing individual searches
 
   const RecentSearches({
     super.key,
     required this.recentSearches,
     required this.onSearchTap,
     required this.onClearAll,
+    this.onRemoveSearch,
   });
 
   @override
@@ -79,6 +82,19 @@ class RecentSearches extends StatelessWidget {
                                   ?.copyWith(color: AppTheme.highEmphasisText),
                             ),
                           ),
+                          if (onRemoveSearch != null)
+                            IconButton(
+                              onPressed: () => onRemoveSearch!(search),
+                              icon: Icon(
+                                Icons.close,
+                                color: AppTheme.lowEmphasisText,
+                                size: 16,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 32,
+                              ),
+                            ),
                           Icon(
                             Icons.arrow_forward_ios_rounded,
                             color: AppTheme.lowEmphasisText,
