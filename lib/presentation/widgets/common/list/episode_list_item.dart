@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/presentation/providers/watch_history/watch_history_provider.dart';
 
 import '../../../../data/models/models/generic_media_details.dart';
 import '../../../providers/download/download_provider.dart';
@@ -32,33 +33,38 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   bool _isDownloadingFile = false;
   double _downloadProgress = 0.0;
   bool _isDownloaded = false;
+  bool _isWatched = false; // Add watch history state
   DownloadProvider? _downloadManager;
+  WatchHistoryProvider? _historyProvider;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _setupDownloadListener();
+      _setupListener();
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _setupDownloadListener();
+    _setupListener();
   }
 
-  void _setupDownloadListener() {
+  void _setupListener() {
     _downloadManager = context.read<DownloadProvider>();
+    _historyProvider = context.read<WatchHistoryProvider>();
     _updateDownloadState();
 
     // Add listener for real-time updates
     _downloadManager?.addListener(_onDownloadStateChanged);
+    _historyProvider?.addListener(_onWatchHistoryChanged);
   }
 
   @override
   void dispose() {
     _downloadManager?.removeListener(_onDownloadStateChanged);
+    _historyProvider?.removeListener(_onWatchHistoryChanged);
     super.dispose();
   }
 
@@ -67,6 +73,28 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
       _updateDownloadState();
     }
   }
+
+  void _onWatchHistoryChanged() {
+    if (mounted) {
+      _updateWatchHistoryState();
+    }
+  }
+
+  void _updateWatchHistoryState() {
+    if (_historyProvider == null || widget.mediaData == null) return;
+
+    final wasWatched = _isWatched;
+    _isWatched = _historyProvider!.hasWatchedEpisode(
+      widget.mediaData!.tmdbId,
+      widget.season.seasonNumber,
+      widget.episode.episodeNumber,
+    );
+
+    if (wasWatched != _isWatched) {
+      setState(() {});
+    }
+  }
+
 
   void _updateDownloadState() {
     if (_downloadManager == null) return;
@@ -156,9 +184,9 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color:
-                    _isDownloaded
-                        ? theme.colorScheme.primary.withOpacity(0.4)
-                        : theme.colorScheme.outline.withOpacity(0.2),
+                _isDownloaded
+                    ? theme.colorScheme.primary.withOpacity(0.4)
+                    : theme.colorScheme.outline.withOpacity(0.2),
                 width: _isDownloaded ? 2 : 1,
               ),
               boxShadow: [
@@ -197,7 +225,10 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
   Widget _buildThumbnail(ThemeData theme) {
     return Container(
       // Use flexible sizing based on screen width
-      width: MediaQuery.of(context).size.width * 0.2, // 20% of screen width
+      width: MediaQuery
+          .of(context)
+          .size
+          .width * 0.2, // 20% of screen width
       constraints: const BoxConstraints(
         minWidth: 80,
         maxWidth: 120,
@@ -208,9 +239,9 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color:
-              _isDownloaded
-                  ? theme.colorScheme.primary.withOpacity(0.4)
-                  : theme.colorScheme.outline.withOpacity(0.2),
+          _isDownloaded
+              ? theme.colorScheme.primary.withOpacity(0.4)
+              : theme.colorScheme.outline.withOpacity(0.2),
           width: _isDownloaded ? 2 : 1,
         ),
       ),
@@ -221,20 +252,20 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
             AspectRatio(
               aspectRatio: 16 / 9, // Maintain proper aspect ratio
               child:
-                  widget.episode.stillPath != null &&
-                          widget.episode.stillPath!.isNotEmpty
-                      ? Image.network(
-                        'https://image.tmdb.org/t/p/w300${widget.episode.stillPath!}',
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return _buildPlaceholder(theme, isLoading: true);
-                        },
-                        errorBuilder:
-                            (context, error, stackTrace) =>
-                                _buildPlaceholder(theme),
-                      )
-                      : _buildPlaceholder(theme),
+              widget.episode.stillPath != null &&
+                  widget.episode.stillPath!.isNotEmpty
+                  ? Image.network(
+                'https://image.tmdb.org/t/p/w300${widget.episode.stillPath!}',
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return _buildPlaceholder(theme, isLoading: true);
+                },
+                errorBuilder:
+                    (context, error, stackTrace) =>
+                    _buildPlaceholder(theme),
+              )
+                  : _buildPlaceholder(theme),
             ),
             // Downloaded indicator overlay
             if (_isDownloaded)
@@ -281,22 +312,22 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
       ),
       child: Center(
         child:
-            isLoading
-                ? SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      theme.colorScheme.primary,
-                    ),
-                  ),
-                )
-                : Icon(
-                  Icons.movie_creation_outlined,
-                  size: 24,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-                ),
+        isLoading
+            ? SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              theme.colorScheme.primary,
+            ),
+          ),
+        )
+            : Icon(
+          Icons.movie_creation_outlined,
+          size: 24,
+          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+        ),
       ),
     );
   }
@@ -313,7 +344,9 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
             maxHeight: 50, // Maximum to prevent excessive growth
           ),
           child: Text(
-            'E${widget.episode.episodeNumber}: ${widget.episode.name.isNotEmpty ? widget.episode.name : "Episode ${widget.episode.episodeNumber}"}',
+            'E${widget.episode.episodeNumber}: ${widget.episode.name.isNotEmpty
+                ? widget.episode.name
+                : "Episode ${widget.episode.episodeNumber}"}',
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: theme.colorScheme.onSurface,
@@ -412,6 +445,42 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
           ],
         ),
       );
+    } else if (_isWatched) {
+      // Add watch history indicator
+      content = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.green.withOpacity(0.2),
+              Colors.green.withOpacity(0.1),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.green.withOpacity(0.4),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle,
+              size: 14,
+              color: Colors.green,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Watched',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: Colors.green,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
     } else if (widget.episode.airDate != null &&
         widget.episode.airDate!.isNotEmpty) {
       content = Container(
@@ -455,15 +524,18 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
     );
   }
 
+  // Update the _buildActionButton to show different states for watched episodes
   Widget _buildActionButton(ThemeData theme) {
     // Use responsive sizing for action button
-    final buttonSize = MediaQuery.of(context).size.width * 0.12;
-    final clampedSize = buttonSize.clamp(
-      44.0,
-      56.0,
-    ); // Minimum 44px for accessibility, max 56px
+    final buttonSize = MediaQuery
+        .of(context)
+        .size
+        .width * 0.12;
+    final clampedSize = buttonSize.clamp(44.0, 56.0);
 
     Widget buttonContent;
+    Color buttonColor;
+    Color backgroundColor;
 
     if (widget.isCurrentlyLoading) {
       buttonContent = SizedBox(
@@ -474,23 +546,41 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
           valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
         ),
       );
+      buttonColor = theme.colorScheme.primary;
+      backgroundColor = theme.colorScheme.surfaceVariant.withOpacity(0.5);
     } else if (_isDownloadingFile) {
       buttonContent = Icon(
         Icons.close_rounded,
         color: theme.colorScheme.error,
         size: clampedSize * 0.5,
       );
-    } else {
+      buttonColor = theme.colorScheme.error;
+      backgroundColor = theme.colorScheme.error.withOpacity(0.2);
+    } else if (_isDownloaded) {
       buttonContent = Icon(
-        _isDownloaded
-            ? Icons.play_circle_filled_rounded
-            : Icons.play_arrow_rounded,
-        color:
-            _isDownloaded
-                ? theme.colorScheme.primary
-                : theme.colorScheme.secondary,
+        Icons.play_circle_filled_rounded,
+        color: theme.colorScheme.primary,
         size: clampedSize * 0.6,
       );
+      buttonColor = theme.colorScheme.primary;
+      backgroundColor = theme.colorScheme.primary.withOpacity(0.3);
+    } else if (_isWatched) {
+      // Show replay icon for watched episodes
+      buttonContent = Icon(
+        Icons.replay_rounded,
+        color: Colors.green,
+        size: clampedSize * 0.6,
+      );
+      buttonColor = Colors.green;
+      backgroundColor = Colors.green.withOpacity(0.2);
+    } else {
+      buttonContent = Icon(
+        Icons.play_arrow_rounded,
+        color: theme.colorScheme.secondary,
+        size: clampedSize * 0.6,
+      );
+      buttonColor = theme.colorScheme.secondary;
+      backgroundColor = theme.colorScheme.secondary.withOpacity(0.2);
     }
 
     return Container(
@@ -498,49 +588,19 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
       height: clampedSize,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors:
-              widget.isCurrentlyLoading
-                  ? [
-                    theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                    theme.colorScheme.surfaceVariant.withOpacity(0.2),
-                  ]
-                  : _isDownloadingFile
-                  ? [
-                    theme.colorScheme.error.withOpacity(0.2),
-                    theme.colorScheme.error.withOpacity(0.1),
-                  ]
-                  : _isDownloaded
-                  ? [
-                    theme.colorScheme.primary.withOpacity(0.3),
-                    theme.colorScheme.primary.withOpacity(0.1),
-                  ]
-                  : [
-                    theme.colorScheme.secondary.withOpacity(0.2),
-                    theme.colorScheme.secondary.withOpacity(0.1),
-                  ],
+          colors: [
+            backgroundColor,
+            backgroundColor.withOpacity(0.5),
+          ],
         ),
         borderRadius: BorderRadius.circular(clampedSize / 2),
         border: Border.all(
-          color:
-              widget.isCurrentlyLoading
-                  ? theme.colorScheme.outline.withOpacity(0.3)
-                  : _isDownloadingFile
-                  ? theme.colorScheme.error.withOpacity(0.3)
-                  : _isDownloaded
-                  ? theme.colorScheme.primary.withOpacity(0.5)
-                  : theme.colorScheme.secondary.withOpacity(0.4),
+          color: buttonColor.withOpacity(0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: (widget.isCurrentlyLoading
-                    ? theme.colorScheme.shadow
-                    : _isDownloadingFile
-                    ? theme.colorScheme.error
-                    : _isDownloaded
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.secondary)
-                .withOpacity(0.1),
+            color: buttonColor.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -550,19 +610,18 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(clampedSize / 2),
-          onTap:
-              widget.isCurrentlyLoading || _isPressed
-                  ? null
-                  : _isDownloadingFile
-                  ? () {
-                    _downloadManager?.cancelDownload(widget.episodeKey);
-                    setState(() {
-                      _isDownloadingFile = false;
-                      _downloadProgress = 0.0;
-                    });
-                    _showCancelSnackbar(context, theme);
-                  }
-                  : _handleTap,
+          onTap: widget.isCurrentlyLoading || _isPressed
+              ? null
+              : _isDownloadingFile
+              ? () {
+            _downloadManager?.cancelDownload(widget.episodeKey);
+            setState(() {
+              _isDownloadingFile = false;
+              _downloadProgress = 0.0;
+            });
+            _showCancelSnackbar(context, theme);
+          }
+              : _handleTap,
           child: Center(child: buttonContent),
         ),
       ),
@@ -602,7 +661,8 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
                       ),
                     ),
                     Text(
-                      'Episode ${widget.episode.episodeNumber} download stopped',
+                      'Episode ${widget.episode
+                          .episodeNumber} download stopped',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withOpacity(0.8),
                       ),

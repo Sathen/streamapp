@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/presentation/providers/watch_history/watch_history_provider.dart';
+import 'package:stream_flutter/presentation/screens/watch_history/watch_history_screen.dart';
 
 // Models
 import 'core/di/service_locator.dart';
@@ -45,6 +47,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<DownloadProvider>(
           create: (_) => DownloadProvider(), // This one is singleton
         ),
+        ChangeNotifierProvider<WatchHistoryProvider>(
+          create: (_) => WatchHistoryProvider(), // This one is singleton
+        ),
       ],
       child: MaterialApp.router(
         title: 'Streaming App',
@@ -67,6 +72,10 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: '/downloads',
           builder: (context, state) => const DownloadsScreen(),
+        ),
+        GoRoute( // Add this new route
+          path: '/history',
+          builder: (context, state) => const WatchHistoryScreen(),
         ),
         GoRoute(
           path: '/media/tmdb/:type/:id',

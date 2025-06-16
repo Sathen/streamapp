@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:stream_flutter/data/models/models/generic_media_details.dart';
 
 import '../../../core/di/service_locator.dart';
@@ -13,6 +14,7 @@ import '../../widgets/common/stream_selector_modal.dart';
 import '../../../core/utils/errors.dart';
 import '../base/base_provider.dart';
 import '../download/download_provider.dart';
+import '../watch_history/watch_history_provider.dart';
 
 class MediaDetailsProvider extends BaseProvider {
   final MediaService _mediaService = get<MediaService>();
@@ -153,6 +155,20 @@ class MediaDetailsProvider extends BaseProvider {
       final fileName =
           '${seriesTitle.replaceAll(" ", "_")}_S${season.seasonNumber}E${episode.episodeNumber}';
 
+      if (context.mounted) {
+        final historyProvider = Provider.of<WatchHistoryProvider>(context, listen: false);
+        await historyProvider.addEpisodeToHistory(
+          tmdbId: tmdbId.toString(),
+          title: seriesTitle,
+          originalTitle: seriesOriginalTitle ?? seriesTitle,
+          seasonNumber: season.seasonNumber,
+          episodeNumber: episode.episodeNumber,
+          posterPath: _mediaData?.posterPath,
+          backdropPath: _mediaData?.backdropPath,
+          rating: _mediaData?.voteAverage,
+        );
+      }
+
       // Show stream selector using the provider's stream handling
       await _showStreamSelectorFromApi(
         context: context,
@@ -270,5 +286,25 @@ class MediaDetailsProvider extends BaseProvider {
     _isFetchingStreams = false;
     clearError();
     safeNotifyListeners();
+  }
+
+
+  bool hasWatchedEpisode(BuildContext context, String tmdbId, int seasonNumber, int episodeNumber) {
+    try {
+      final historyProvider = Provider.of<WatchHistoryProvider>(context, listen: false);
+      return historyProvider.hasWatchedEpisode(tmdbId, seasonNumber, episodeNumber);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get watched episodes for a TV show (for UI indicators)
+  Map<int, Set<int>>? getWatchedEpisodes(BuildContext context, String tmdbId) {
+    try {
+      final historyProvider = Provider.of<WatchHistoryProvider>(context, listen: false);
+      return historyProvider.getWatchedEpisodes(tmdbId);
+    } catch (e) {
+      return null;
+    }
   }
 }

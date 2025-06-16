@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/datasources/remote/client/online_server_api.dart';
+import '../../../providers/watch_history/watch_history_provider.dart';
 import '../../../widgets/common/dialogs/play_options_dialog.dart';
 import '../../../../core/utils/errors.dart';
 import '../../../providers/download/download_provider.dart';
@@ -216,8 +218,20 @@ class MoviePlaySection extends StatelessWidget {
       throw Exception('No embed URL available');
     }
 
-    final serverApi = OnlineServerApi();
-    final streams = await serverApi.getVideoStreamsByPath(mediaData!.embedUrl!);
+    // Add to watch history for online movies (no seasons)
+    if (context.mounted && mediaData!.seasons.isEmpty) {
+      final historyProvider = Provider.of<WatchHistoryProvider>(context, listen: false);
+      await historyProvider.addMovieToHistory(
+        tmdbId: mediaData.tmdbId,
+        title: mediaData.title,
+        originalTitle: mediaData.title, // Online media might not have separate original title
+        posterPath: mediaData.posterPath,
+        backdropPath: mediaData.backdropPath,
+        rating: mediaData.rating,
+      );
+    }
+
+    final streams = await get<OnlineServerApi>().getVideoStreamsByPath(mediaData!.embedUrl!);
 
     if (streams.data.isEmpty) {
       throw Exception('No streams available');
@@ -241,8 +255,20 @@ class MoviePlaySection extends StatelessWidget {
       throw Exception('No media data available');
     }
 
-    final serverApi = OnlineServerApi();
-    final streams = await serverApi.getVideoSteams(
+    // Add to watch history when streams are requested
+    if (context.mounted) {
+      final historyProvider = Provider.of<WatchHistoryProvider>(context, listen: false);
+      await historyProvider.addMovieToHistory(
+        tmdbId: tmdbId.toString(),
+        title: mediaData.title,
+        originalTitle: mediaData.originalTitle ?? mediaData.title,
+        posterPath: mediaData.posterPath,
+        backdropPath: mediaData.backdropPath,
+        rating: mediaData.voteAverage,
+      );
+    }
+
+    final streams = await get<OnlineServerApi>().getVideoSteams(
       title: mediaData.title,
       originalTitle: mediaData.originalTitle,
       mediaType: 'movie',

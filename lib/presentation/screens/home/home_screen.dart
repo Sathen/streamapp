@@ -433,6 +433,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 label: 'Search',
               ),
               BottomNavigationBarItem(
+                icon: Icon(Icons.history_rounded),
+                label: 'History',
+              ),
+              BottomNavigationBarItem(
                 icon: Icon(Icons.download_rounded),
                 label: 'Downloads',
               ),
@@ -452,6 +456,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         context.go('/search');
         break;
       case 2:
+        context.go('/history');
+        break;
+      case 3:
         context.go('/downloads');
         break;
     }
