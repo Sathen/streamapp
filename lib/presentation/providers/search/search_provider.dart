@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/di/service_locator.dart';
 import '../../../data/datasources/remote/client/online_server_api.dart';
 import '../../../data/models/models/search_result.dart';
 import '../base/base_provider.dart';
 
 class SearchProvider extends BaseProvider {
-  final OnlineServerApi _serverApi = OnlineServerApi();
+  final OnlineServerApi _serverApi = get<OnlineServerApi>();
 
   List<String> _recentSearches = [];
   SearchResult _results = SearchResult();

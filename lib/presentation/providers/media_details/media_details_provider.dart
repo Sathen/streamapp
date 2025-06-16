@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stream_flutter/data/models/models/generic_media_details.dart';
 
+import '../../../core/di/service_locator.dart';
 import '../../../data/datasources/remote/client/online_server_api.dart';
 import '../../../data/datasources/remote/services/media_service.dart';
 import '../../../data/models/models/online_media_details_entity.dart';
@@ -14,8 +15,8 @@ import '../base/base_provider.dart';
 import '../download/download_provider.dart';
 
 class MediaDetailsProvider extends BaseProvider {
-  final MediaService _mediaService = MediaService(null, null, null);
-  final OnlineServerApi _onlineApi = OnlineServerApi();
+  final MediaService _mediaService = get<MediaService>();
+  final OnlineServerApi _onlineApi = get<OnlineServerApi>();
 
   TmdbMediaDetails? _mediaData;
   List<TVSeasonDetails>? _seasonDetails;

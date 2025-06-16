@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -9,7 +8,9 @@ import '../../../providers/media/media_provider.dart';
 import 'category_button.dart';
 
 class CategorySelector extends StatelessWidget {
-  const CategorySelector({super.key});
+  final VoidCallback? onCategoryChanged;
+
+  const CategorySelector({super.key, this.onCategoryChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +37,10 @@ class CategorySelector extends StatelessWidget {
                   category: DisplayCategory.movies,
                   icon: Icons.movie_rounded,
                   label: 'Movies',
-                  isSelected: mediaProvider.selectedCategory == DisplayCategory.movies,
-                  onTap: () => _onCategoryChanged(context, DisplayCategory.movies),
+                  isSelected:
+                      mediaProvider.selectedCategory == DisplayCategory.movies,
+                  onTap:
+                      () => _onCategoryChanged(context, DisplayCategory.movies),
                 ),
               ),
               const SizedBox(width: 4),
@@ -46,7 +49,8 @@ class CategorySelector extends StatelessWidget {
                   category: DisplayCategory.tv,
                   icon: Icons.tv_rounded,
                   label: 'TV Shows',
-                  isSelected: mediaProvider.selectedCategory == DisplayCategory.tv,
+                  isSelected:
+                      mediaProvider.selectedCategory == DisplayCategory.tv,
                   onTap: () => _onCategoryChanged(context, DisplayCategory.tv),
                 ),
               ),
@@ -62,5 +66,8 @@ class CategorySelector extends StatelessWidget {
 
     // Update the MediaProvider with the selected category
     context.read<MediaProvider>().setSelectedCategory(category);
+
+    // Notify parent about category change
+    onCategoryChanged?.call();
   }
 }

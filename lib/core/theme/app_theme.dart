@@ -4,21 +4,29 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Enhanced color palette with better contrast
-  static const primaryBlue = Color(0xFF3F51B5);       // More accessible primary blue
-  static const primaryVariant = Color(0xFF1A237E);    // Your original dark blue
-  static const accentBlue = Color(0xFF64B5F6);        // Light blue accent
-  static const lightAccent = Color(0xFF90CAF9);       // Even lighter for better contrast
+  static const primaryBlue = Color(0xFF3F51B5); // More accessible primary blue
+  static const primaryVariant = Color(0xFF1A237E); // Your original dark blue
+  static const accentBlue = Color(0xFF64B5F6); // Light blue accent
+  static const lightAccent = Color(
+    0xFF90CAF9,
+  ); // Even lighter for better contrast
 
   // Surface colors with proper hierarchy
-  static const surfaceBlue = Color(0xFF1E2746);       // Lighter surface for better contrast
-  static const surfaceVariant = Color(0xFF2A3B5C);    // Medium surface tone
-  static const backgroundBlue = Color(0xFF0F1419);    // Dark background with subtle blue
+  static const surfaceBlue = Color(
+    0xFF1E2746,
+  ); // Lighter surface for better contrast
+  static const surfaceVariant = Color(0xFF2A3B5C); // Medium surface tone
+  static const backgroundBlue = Color(
+    0xFF0F1419,
+  ); // Dark background with subtle blue
 
   // Text colors optimized for readability
-  static const highEmphasisText = Color(0xFFE8EAF6);  // High contrast white-blue
+  static const highEmphasisText = Color(0xFFE8EAF6); // High contrast white-blue
   static const mediumEmphasisText = Color(0xFFB3B8CF); // Medium contrast
-  static const lowEmphasisText = Color(0xFF8A92B2);   // Low emphasis but still readable
-  static const disabledText = Color(0xFF5C6B85);      // Disabled state
+  static const lowEmphasisText = Color(
+    0xFF8A92B2,
+  ); // Low emphasis but still readable
+  static const disabledText = Color(0xFF5C6B85); // Disabled state
 
   // Success, warning, error colors that work on dark backgrounds
   static const successColor = Color(0xFF4CAF50);
@@ -104,16 +112,13 @@ class AppTheme {
         ),
       ),
 
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surfaceBlue,
         elevation: 4,
         shadowColor: Colors.black.withOpacity(0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: outlineVariant,
-            width: 0.5,
-          ),
+          side: BorderSide(color: outlineVariant, width: 0.5),
         ),
       ),
 
@@ -202,7 +207,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surfaceVariant,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: outlineColor),
@@ -278,15 +286,9 @@ class AppTheme {
         ),
       ),
 
-      iconTheme: IconThemeData(
-        color: mediumEmphasisText,
-        size: 24,
-      ),
+      iconTheme: IconThemeData(color: mediumEmphasisText, size: 24),
 
-      primaryIconTheme: IconThemeData(
-        color: accentBlue,
-        size: 24,
-      ),
+      primaryIconTheme: IconThemeData(color: accentBlue, size: 24),
 
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: accentBlue,
@@ -305,9 +307,7 @@ class AppTheme {
         contentTextStyle: TextStyle(color: highEmphasisText),
         actionTextColor: accentBlue,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
 
       dividerTheme: DividerThemeData(
@@ -340,7 +340,8 @@ class AppTheme {
           return mediumEmphasisText;
         }),
         trackColor: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) return accentBlue.withOpacity(0.5);
+          if (states.contains(MaterialState.selected))
+            return accentBlue.withOpacity(0.5);
           return outlineColor;
         }),
       ),
@@ -352,9 +353,7 @@ class AppTheme {
         }),
         checkColor: MaterialStateProperty.all(backgroundBlue),
         side: BorderSide(color: outlineColor, width: 2),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
 
       radioTheme: RadioThemeData(
@@ -373,17 +372,14 @@ class AppTheme {
         valueIndicatorTextStyle: TextStyle(color: Colors.white),
       ),
 
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: accentBlue,
         unselectedLabelColor: mediumEmphasisText,
         indicator: UnderlineTabIndicator(
           borderSide: BorderSide(color: accentBlue, width: 2),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        labelStyle: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-        ),
+        labelStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         unselectedLabelStyle: TextStyle(
           fontWeight: FontWeight.normal,
           fontSize: 14,
@@ -396,13 +392,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: outlineColor),
         ),
-        textStyle: TextStyle(
-          color: highEmphasisText,
-          fontSize: 12,
-        ),
+        textStyle: TextStyle(color: highEmphasisText, fontSize: 12),
       ),
 
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: surfaceBlue,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
@@ -414,10 +407,7 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.w600,
         ),
-        contentTextStyle: TextStyle(
-          color: mediumEmphasisText,
-          fontSize: 14,
-        ),
+        contentTextStyle: TextStyle(color: mediumEmphasisText, fontSize: 14),
       ),
 
       bottomSheetTheme: BottomSheetThemeData(
@@ -426,9 +416,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        constraints: BoxConstraints(
-          maxWidth: double.infinity,
-        ),
+        constraints: BoxConstraints(maxWidth: double.infinity),
       ),
     );
   }

@@ -1,71 +1,61 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-// Routing
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:stream_flutter/presentation/providers/media_details/media_details_provider.dart';
-import 'package:stream_flutter/presentation/screens/downloads/downloads_screen.dart';
-import 'package:stream_flutter/presentation/screens/media_details/online_media_details_screen.dart';
-import 'package:stream_flutter/presentation/screens/media_details/tmdb_media_details_screen.dart';
-import 'package:stream_flutter/presentation/screens/search/search_screen.dart';
 
-// Theme
+// Models
+import 'core/di/service_locator.dart';
 import 'core/theme/app_theme.dart';
-
-// New providers
 import 'data/models/models/search_result.dart';
 import 'data/models/models/tmdb_models.dart';
 import 'presentation/providers/download/download_provider.dart';
 import 'presentation/providers/media/media_provider.dart';
+import 'presentation/providers/media_details/media_details_provider.dart';
 import 'presentation/providers/search/search_provider.dart';
-
-// Screens
+import 'presentation/screens/downloads/downloads_screen.dart';
+// Your existing screens
 import 'presentation/screens/home/home_screen.dart';
+import 'presentation/screens/media_details/online_media_details_screen.dart';
+import 'presentation/screens/media_details/tmdb_media_details_screen.dart';
+import 'presentation/screens/search/search_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize download provider
-  final downloadProvider = DownloadProvider();
-  await downloadProvider.initialize();
+  // Initialize dependencies BEFORE running the app
+  await initializeDependencies();
 
-  runApp(MyApp(downloadProvider: downloadProvider));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final DownloadProvider downloadProvider;
-
-  MyApp({super.key, required this.downloadProvider});
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // Media Provider
-        ChangeNotifierProvider<MediaProvider>(create: (_) => MediaProvider()),
-
-        // Media Details Provider - ADD THIS!
-        ChangeNotifierProvider<MediaDetailsProvider>(create: (_) => MediaDetailsProvider()),
-
-        // Search Provider
-        ChangeNotifierProvider<SearchProvider>(create: (_) => SearchProvider()),
-
-        // Download Provider - Make sure this is the correct class name
-        ChangeNotifierProvider<DownloadProvider>.value(value: downloadProvider),
+        ChangeNotifierProvider<MediaProvider>(
+          create: (_) => get<MediaProvider>(),
+        ),
+        ChangeNotifierProvider<SearchProvider>(
+          create: (_) => get<SearchProvider>(),
+        ),
+        ChangeNotifierProvider<MediaDetailsProvider>(
+          create: (_) => get<MediaDetailsProvider>(),
+        ),
+        ChangeNotifierProvider<DownloadProvider>(
+          create: (_) => get<DownloadProvider>(), // This one is singleton
+        ),
       ],
-      // Use builder to ensure providers are available to GoRouter
-      builder: (context, child) {
-        return MaterialApp.router(
-          title: 'Streaming App',
-          theme: AppTheme.darkTheme,
-          routerConfig: _buildRouter(context),
-          debugShowCheckedModeBanner: false,
-        );
-      },
+      child: MaterialApp.router(
+        title: 'Streaming App',
+        theme: AppTheme.darkTheme,
+        routerConfig: _buildRouter(),
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 
-  GoRouter _buildRouter(BuildContext context) {
+  GoRouter _buildRouter() {
     return GoRouter(
       initialLocation: '/',
       routes: [
