@@ -104,7 +104,7 @@ class _MediaHeaderSectionState extends State<MediaHeaderSection> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    year,
+                    year.toString(),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppTheme.accentBlue,
                       fontWeight: FontWeight.w600,
@@ -228,16 +228,16 @@ class _MediaHeaderSectionState extends State<MediaHeaderSection> {
     );
   }
 
-  String? _getYear() {
-    if (widget.mediaData is MovieDetails) {
-      final releaseDate = (widget.mediaData as MovieDetails).releaseDate;
+  int? _getYear() {
+    if (widget.mediaData is TmdbMovieDetails) {
+      final releaseDate = (widget.mediaData as TmdbMovieDetails).releaseDate;
       if (releaseDate.isNotEmpty) {
-        return DateTime.parse(releaseDate).year.toString();
+        return DateTime.parse(releaseDate).year;
       }
     } else if (widget.mediaData is TVDetails) {
       final firstAirDate = (widget.mediaData as TVDetails).firstAirDate;
       if (firstAirDate.isNotEmpty) {
-        return DateTime.parse(firstAirDate).year.toString();
+        return DateTime.parse(firstAirDate).year;
       }
     } else if (widget.onlineMediaData != null) {
       return widget.onlineMediaData!.year;

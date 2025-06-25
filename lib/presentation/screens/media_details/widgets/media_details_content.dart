@@ -53,7 +53,7 @@ class MediaDetailsContent extends StatelessWidget {
     final hasData =
         isOnlineMedia
             ? provider.onlineMediaData != null
-            : provider.mediaData != null;
+            : provider.tmdbMediaData != null;
 
     if (!hasData) {
       return const Padding(
@@ -70,7 +70,7 @@ class MediaDetailsContent extends StatelessWidget {
       children: [
         // Header Section
         MediaHeaderSection(
-          mediaData: provider.mediaData,
+          mediaData: provider.tmdbMediaData,
           onlineMediaData: provider.onlineMediaData,
         ),
 
@@ -90,8 +90,8 @@ class MediaDetailsContent extends StatelessWidget {
         const SizedBox(height: 16),
 
         // Production Info Section
-        if (!isOnlineMedia && provider.mediaData != null)
-          ProductionInfoSection(mediaData: provider.mediaData!),
+        if (!isOnlineMedia && provider.tmdbMediaData != null)
+          ProductionInfoSection(mediaData: provider.tmdbMediaData!),
 
         const SizedBox(height: 40),
       ],

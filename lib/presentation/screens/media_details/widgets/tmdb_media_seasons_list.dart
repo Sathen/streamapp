@@ -4,7 +4,7 @@ import 'package:stream_flutter/presentation/widgets/common/season_episode_switch
 import '../../../../data/models/models/generic_media_details.dart';
 import '../../../../data/models/models/tmdb_models.dart';
 
-class TVSeasonsList extends StatefulWidget {
+class TmdbSeasonsList extends StatefulWidget {
   final List<TVSeasonDetails>? seasonDetails;
   final int tmdbId;
   final GenericEpisode? loadingEpisode;
@@ -12,12 +12,13 @@ class TVSeasonsList extends StatefulWidget {
   final void Function(
     TVSeasonDetails season,
     TVEpisode episode,
+    int? year,
     String? embedUrl,
     String? contentTitle,
   )
   onEpisodeTap;
 
-  const TVSeasonsList({
+  const TmdbSeasonsList({
     super.key,
     required this.seasonDetails,
     required this.tmdbId,
@@ -27,10 +28,10 @@ class TVSeasonsList extends StatefulWidget {
   });
 
   @override
-  State<TVSeasonsList> createState() => _TVSeasonsListState();
+  State<TmdbSeasonsList> createState() => _TmdbSeasonsListState();
 }
 
-class _TVSeasonsListState extends State<TVSeasonsList>
+class _TmdbSeasonsListState extends State<TmdbSeasonsList>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -131,7 +132,6 @@ class _TVSeasonsListState extends State<TVSeasonsList>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Optional: Simple header (only show if useful)
           if (genericSeasons.length > 1 || _getTotalEpisodes() > 10)
             _buildSimpleHeader(theme),
 
@@ -214,6 +214,7 @@ class _TVSeasonsListState extends State<TVSeasonsList>
       widget.onEpisodeTap(
         season,
         episode,
+        widget.mediaData?.year,
         widget.mediaData?.title,
         widget.mediaData?.originalTitle,
       );

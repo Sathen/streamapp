@@ -55,6 +55,7 @@ class _EpisodeListItemState extends State<EpisodeListItem> {
     _downloadManager = context.read<DownloadProvider>();
     _historyProvider = context.read<WatchHistoryProvider>();
     _updateDownloadState();
+    _onWatchHistoryChanged();
 
     // Add listener for real-time updates
     _downloadManager?.addListener(_onDownloadStateChanged);

@@ -8,7 +8,7 @@ import '../../../models/models/search_result.dart';
 import '../../../models/models/video_streams.dart';
 
 class OnlineServerApi {
-  static const HOST = 'https://fetcher.domcinema.win';
+  static const HOST =  'http://192.168.1.28:3535';
 
   OnlineServerApi();
 

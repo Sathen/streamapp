@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:stream_flutter/presentation/screens/home/widgets/loading_shimer.dart';
@@ -7,8 +8,8 @@ import 'package:stream_flutter/presentation/screens/home/widgets/media_content.d
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/errors.dart';
 import '../../providers/media/media_provider.dart';
-import 'widgets/category_selector.dart';
 import 'widgets/error_retry_widget.dart';
+import 'widgets/home_app_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,12 +21,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _isInitialized = false;
   String? _lastError;
+  final ScrollController _scrollController = ScrollController();
+  bool _innerBoxIsScrolled = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Initialize media data when screen loads
+    // Defer initialization until after the build phase
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeData();
     });
@@ -34,20 +37,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // Remove scroll listener cleanup
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final scrolled = _scrollController.offset > 50;
+    if (scrolled != _innerBoxIsScrolled) {
+      // Use SchedulerBinding to avoid conflicts with gesture processing
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _innerBoxIsScrolled = scrolled;
+          });
+        }
+      });
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Refresh data when app comes back to foreground
     if (state == AppLifecycleState.resumed && _isInitialized) {
-      _refreshData(showLoading: false);
+      _refreshData();
     }
   }
 
   Future<void> _initializeData() async {
-    final provider = context.read<MediaProvider>();
+    // Ensure we're not in a build phase
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => _initializeData());
+      return;
+    }
 
+    final provider = context.read<MediaProvider>();
     final result = await provider.initializeData();
 
     if (mounted) {
@@ -57,97 +83,89 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _isInitialized = true;
             _lastError = null;
           });
-          // No success message for initial load - it's expected behavior
         },
         (error, exception) {
           setState(() {
             _lastError = error;
+            _isInitialized = true;
           });
-          _handleInitializationError(error, exception);
+          _showErrorMessage(error);
         },
       );
     }
   }
 
-  Future<void> _refreshData({bool showLoading = true}) async {
-    final provider = context.read<MediaProvider>();
-
-    if (!showLoading) {
-      // Silent refresh - just update data without showing loading state
-      await provider.initializeData();
+  Future<void> _refreshData() async {
+    // Ensure we're not in a build phase
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => _refreshData());
       return;
     }
 
+    final provider = context.read<MediaProvider>();
     final result = await provider.initializeData();
 
     if (mounted) {
       result.fold(
         (data) {
-          setState(() {
-            _lastError = null;
-          });
-          // Only show success for manual refresh, and only if user explicitly pulled
-          // No automatic success messages
+          setState(() => _lastError = null);
         },
         (error, exception) {
-          setState(() {
-            _lastError = error;
-          });
-          showErrorSnackbar(context, 'Failed to refresh: $error');
+          setState(() => _lastError = error);
+          _showErrorMessage(error);
         },
       );
     }
   }
 
   Future<void> _refreshCategory() async {
-    final provider = context.read<MediaProvider>();
+    // Ensure we're not in a build phase
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => _refreshCategory());
+      return;
+    }
 
+    final provider = context.read<MediaProvider>();
     final result = await provider.refreshCategory(provider.selectedCategory);
 
     if (mounted) {
       result.fold(
         (data) {
           // Silent success - no message needed for category switching
-          // The UI update itself indicates success
         },
         (error, exception) {
-          showErrorSnackbar(context, 'Failed to refresh category: $error');
+          _showErrorMessage(error);
         },
       );
     }
   }
 
-  void _handleInitializationError(String error, Exception? exception) {
-    // Log error for debugging
-    debugPrint('HomeScreen initialization error: $error');
-    if (exception != null) {
-      debugPrint('Exception: $exception');
-    }
-
-    // Show appropriate error message based on error type
-    if (error.toLowerCase().contains('network') ||
-        error.toLowerCase().contains('connection')) {
-      showErrorSnackbar(
-        context,
-        'Check your internet connection and try again',
-      );
-    } else if (error.toLowerCase().contains('timeout')) {
-      showErrorSnackbar(context, 'Request timed out. Please try again');
-    } else {
-      showErrorSnackbar(context, 'Failed to load content. Please try again');
-    }
+  void _showErrorMessage(String error) {
+    showErrorSnackbar(context, 'Failed to load content. Please try again');
   }
 
   void _showSuccessMessage(String message) {
-    // Reserved for significant user actions only
-    // Like successful downloads, login, etc.
-    // Not for basic content loading
     showSuccessSnackbar(context, message);
   }
 
   void _onCategoryChanged() {
-    // Category changed, refresh that category's data
-    _refreshCategory();
+    // Defer category refresh until after the current build cycle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshCategory();
+    });
+  }
+
+  void _scrollToTop() {
+    // Scroll to top with smooth animation
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   @override
@@ -167,22 +185,35 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ],
               ),
             ),
-            child: SafeArea(
-              child: Column(
-                children: [
-                  // App Bar
-                  _buildAppBar(),
-
-                  // Category Selector
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: CategorySelector(
-                      onCategoryChanged: _onCategoryChanged,
-                    ),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (scrollNotification) {
+                // Alternative scroll detection that's safer for web
+                if (scrollNotification is ScrollUpdateNotification) {
+                  final scrolled = scrollNotification.metrics.pixels > 50;
+                  if (scrolled != _innerBoxIsScrolled) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() {
+                          _innerBoxIsScrolled = scrolled;
+                        });
+                      }
+                    });
+                  }
+                }
+                return false;
+              },
+              child: CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  // Use HomeAppBar instead of custom app bar
+                  HomeAppBar(
+                    innerBoxIsScrolled: _innerBoxIsScrolled,
+                    onCategoryChanged: _onCategoryChanged,
+                    onScrollToTop: _scrollToTop,
                   ),
 
                   // Content
-                  Expanded(child: _buildContent(mediaProvider)),
+                  SliverFillRemaining(child: _buildContent(mediaProvider)),
                 ],
               ),
             ),
@@ -226,123 +257,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildAppBar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppTheme.primaryBlue, AppTheme.accentBlue],
-              ),
-              borderRadius: BorderRadius.circular(50),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryBlue.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.movie_rounded,
-              size: 32,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Streaming App',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppTheme.highEmphasisText,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  _getSubtitleText(),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.mediumEmphasisText,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Connection status indicator
-          _buildConnectionIndicator(),
-        ],
-      ),
-    );
-  }
-
-  String _getSubtitleText() {
-    if (_lastError != null) {
-      return 'Tap to retry loading content';
-    }
-    return 'Discover amazing content';
-  }
-
-  Widget _buildConnectionIndicator() {
-    return Consumer<MediaProvider>(
-      builder: (context, provider, child) {
-        final hasError = provider.hasError;
-        final isLoading = provider.isLoading;
-
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color:
-                hasError
-                    ? AppTheme.errorColor.withOpacity(0.1)
-                    : isLoading
-                    ? AppTheme.accentBlue.withOpacity(0.1)
-                    : AppTheme.successColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color:
-                  hasError
-                      ? AppTheme.errorColor.withOpacity(0.3)
-                      : isLoading
-                      ? AppTheme.accentBlue.withOpacity(0.3)
-                      : AppTheme.successColor.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Icon(
-            hasError
-                ? Icons.error_outline
-                : isLoading
-                ? Icons.sync
-                : Icons.check_circle_outline,
-            size: 20,
-            color:
-                hasError
-                    ? AppTheme.errorColor
-                    : isLoading
-                    ? AppTheme.accentBlue
-                    : AppTheme.successColor,
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildLoadingOverlay() {
     return Positioned(
       top: 0,
       left: 0,
       right: 0,
       child: Container(
-        height: 4,
-        child: LinearProgressIndicator(
-          backgroundColor: Colors.transparent,
-          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentBlue),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceBlue.withOpacity(0.9),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(12),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentBlue),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Refreshing content...',
+              style: TextStyle(color: AppTheme.highEmphasisText, fontSize: 14),
+            ),
+          ],
         ),
       ),
     );
@@ -350,46 +301,40 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildErrorOverlay(String error) {
     return Positioned(
-      top: 16,
-      left: 16,
-      right: 16,
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppTheme.errorColor.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.errorColor.withOpacity(0.9),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(12),
           ),
-          child: Row(
-            children: [
-              Icon(Icons.error_outline, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  error,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.white, size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                error.contains('network')
+                    ? 'Connection lost'
+                    : 'Something went wrong',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              TextButton(
-                onPressed: _refreshData,
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-                child: const Text('Retry'),
+            ),
+            TextButton(
+              onPressed: _refreshData,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
-            ],
-          ),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
       ),
     );

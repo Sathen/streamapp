@@ -20,6 +20,9 @@ abstract class GenericSeason {
 abstract class GenericMediaData {
   String get tmdbId;
   String get title;
+  String? get originalTitle;
+  int get year;
   String? get posterPath;
   String? get backdropPath;
+  double get rating;
 }

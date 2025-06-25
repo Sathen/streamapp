@@ -52,8 +52,8 @@ class _TmdbMediaDetailsScreenState extends State<TmdbMediaDetailsScreen> {
               ),
             ),
             child: MediaDetailsAppBar(
-              title: provider.mediaData?.title ?? 'Details',
-              backdropPath: provider.mediaData?.backdropPath,
+              title: provider.tmdbMediaData?.title ?? 'Details',
+              backdropPath: provider.tmdbMediaData?.backdropPath,
               child: MediaDetailsContent(
                 provider: provider,
                 mediaType: widget.type,

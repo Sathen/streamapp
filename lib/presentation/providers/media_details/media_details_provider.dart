@@ -9,11 +9,7 @@ import '../../../data/models/models/online_media_details_entity.dart';
 import '../../../data/models/models/search_result.dart';
 import '../../../data/models/models/tmdb_models.dart';
 import '../../../data/models/models/video_streams.dart';
-import '../../widgets/common/dialogs/play_options_dialog.dart';
-import '../../widgets/common/stream_selector_modal.dart';
-import '../../../core/utils/errors.dart';
 import '../base/base_provider.dart';
-import '../download/download_provider.dart';
 import '../watch_history/watch_history_provider.dart';
 
 class MediaDetailsProvider extends BaseProvider {
@@ -31,7 +27,7 @@ class MediaDetailsProvider extends BaseProvider {
   bool _isFetchingStreams = false;
 
   // Getters
-  TmdbMediaDetails? get mediaData => _mediaData;
+  TmdbMediaDetails? get tmdbMediaData => _mediaData;
 
   List<TVSeasonDetails>? get seasonDetails => _seasonDetails;
 
@@ -57,7 +53,8 @@ class MediaDetailsProvider extends BaseProvider {
         _mediaData = tvDetails;
         _seasonDetails = await Future.wait(
           tvDetails.seasons.map(
-            (s) => _mediaService.fetchTVSeasonDetails(tmdbId, s.seasonNumber),
+                (s) =>
+                _mediaService.fetchTVSeasonDetails(tmdbId, s.seasonNumber),
           ),
         );
       }
@@ -93,9 +90,9 @@ class MediaDetailsProvider extends BaseProvider {
     if (isOnline && onlineMediaData != null) {
       // For online media, parse the tmdbId string to int
       return onlineMediaData?.tmdbId;
-    } else if (!isOnline && mediaData != null) {
+    } else if (!isOnline && tmdbMediaData != null) {
       // For TMDB media, use the tmdbId getter
-      return mediaData?.tmdbId;
+      return tmdbMediaData?.tmdbId;
     }
     return null;
   }
@@ -126,157 +123,6 @@ class MediaDetailsProvider extends BaseProvider {
     safeNotifyListeners();
   }
 
-  // Handle episode tap with stream selection
-  Future<void> handleEpisodeTap({
-    required BuildContext context,
-    required dynamic season,
-    required dynamic episode,
-    required int tmdbId,
-    String? embedUrl,
-    String? contentTitle,
-  }) async {
-    // Set episode as loading
-    setEpisodeLoading(episode);
-
-    try {
-      // Get series title from provider or contentTitle
-      final seriesTitle = _mediaData?.title ?? contentTitle ?? 'Unknown Series';
-      final seriesOriginalTitle =
-          _mediaData?.originalTitle ?? _mediaData?.title;
-
-      // Generate episode key for caching/tracking
-      final episodeKey = generateEpisodeKey(
-        tmdbId.toString(),
-        season.seasonNumber.toString(),
-        episode.episodeNumber.toString(),
-      );
-
-      // Generate filename for downloads
-      final fileName =
-          '${seriesTitle.replaceAll(" ", "_")}_S${season.seasonNumber}E${episode.episodeNumber}';
-
-      if (context.mounted) {
-        final historyProvider = Provider.of<WatchHistoryProvider>(context, listen: false);
-        await historyProvider.addEpisodeToHistory(
-          tmdbId: tmdbId.toString(),
-          title: seriesTitle,
-          originalTitle: seriesOriginalTitle ?? seriesTitle,
-          seasonNumber: season.seasonNumber,
-          episodeNumber: episode.episodeNumber,
-          posterPath: _mediaData?.posterPath,
-          backdropPath: _mediaData?.backdropPath,
-          rating: _mediaData?.voteAverage,
-        );
-      }
-
-      // Show stream selector using the provider's stream handling
-      await _showStreamSelectorFromApi(
-        context: context,
-        title: seriesTitle,
-        originalTitle: seriesOriginalTitle,
-        season: season,
-        episode: episode,
-        contentTitle: seriesTitle,
-        episodeKey: episodeKey,
-        fileName: fileName,
-      );
-    } catch (e) {
-      // Show error using your existing error handling
-      if (context.mounted) {
-        showErrorSnackbar(context, 'Error fetching streams: $e');
-      }
-      debugPrint('Error in episode tap: $e');
-    } finally {
-      // Clear loading state
-      setEpisodeLoading(null);
-    }
-  }
-
-  // Internal method for showing stream selector with API parameters
-  Future<void> _showStreamSelectorFromApi({
-    required BuildContext context,
-    required String title,
-    String? originalTitle,
-    dynamic season,
-    dynamic episode,
-    MovieDetails? movieDetails,
-    required String contentTitle,
-    required String episodeKey,
-    required String fileName,
-  }) async {
-    try {
-      setFetchingStreams(true);
-
-      var year =
-          movieDetails?.releaseDate != null
-              ? DateTime.parse(movieDetails!.releaseDate).year
-              : null;
-
-      final streams = await _onlineApi.getVideoSteams(
-        title: title,
-        originalTitle: originalTitle,
-        year: year,
-        seasonNumber: season?.seasonNumber,
-        episodeNumber: episode?.episodeNumber,
-        mediaType: season != null ? 'tv' : 'movie',
-      );
-
-      if (!context.mounted) return;
-
-      setFetchingStreams(false);
-
-      await _showStreamSelectorFromStreams(
-        context: context,
-        streams: streams,
-        contentTitle: contentTitle,
-        episodeKey: episodeKey,
-        fileName: fileName,
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-
-      setFetchingStreams(false);
-      showErrorSnackbar(context, 'Failed to load streams. Please try again.');
-      debugPrint('Error fetching video streams: $e');
-    }
-  }
-
-  // Internal method for showing stream selector with streams data
-  Future<void> _showStreamSelectorFromStreams({
-    required BuildContext context,
-    required VideoStreams streams,
-    required String contentTitle,
-    required String episodeKey,
-    required String fileName,
-    String? streamName,
-  }) async {
-    if (streams.data.isEmpty) {
-      showErrorSnackbar(context, 'No streams available for this content.');
-      return;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return StreamSelectorModal(
-          itemTitle: contentTitle,
-          streams: streams,
-          onStreamSelected: (url, name) {
-            showPlayOptionsDialog(
-              context: context,
-              streamUrl: url,
-              streamName: streamName ?? name,
-              contentTitle: contentTitle,
-              episodeKey: episodeKey,
-              fileName: fileName,
-            );
-          },
-        );
-      },
-    );
-  }
-
   // Clear all data
   void clearData() {
     _mediaData = null;
@@ -288,11 +134,20 @@ class MediaDetailsProvider extends BaseProvider {
     safeNotifyListeners();
   }
 
-
-  bool hasWatchedEpisode(BuildContext context, String tmdbId, int seasonNumber, int episodeNumber) {
+  bool hasWatchedEpisode(BuildContext context,
+      String tmdbId,
+      int seasonNumber,
+      int episodeNumber,) {
     try {
-      final historyProvider = Provider.of<WatchHistoryProvider>(context, listen: false);
-      return historyProvider.hasWatchedEpisode(tmdbId, seasonNumber, episodeNumber);
+      final historyProvider = Provider.of<WatchHistoryProvider>(
+        context,
+        listen: false,
+      );
+      return historyProvider.hasWatchedEpisode(
+        tmdbId,
+        seasonNumber,
+        episodeNumber,
+      );
     } catch (e) {
       return false;
     }
@@ -301,10 +156,31 @@ class MediaDetailsProvider extends BaseProvider {
   /// Get watched episodes for a TV show (for UI indicators)
   Map<int, Set<int>>? getWatchedEpisodes(BuildContext context, String tmdbId) {
     try {
-      final historyProvider = Provider.of<WatchHistoryProvider>(context, listen: false);
+      final historyProvider = Provider.of<WatchHistoryProvider>(
+        context,
+        listen: false,
+      );
       return historyProvider.getWatchedEpisodes(tmdbId);
     } catch (e) {
       return null;
     }
+  }
+
+  GenericMediaData? getMediaDetails(bool isOnlineMedia) {
+    return isOnlineMedia ? onlineMediaData : tmdbMediaData;
+  }
+
+  Future<VideoStreams> getVideoSteamsByPath({required String embedUrl}) async {
+    return _onlineApi.getVideoStreamsByPath(embedUrl);
+  }
+
+  Future<VideoStreams> getVideoSteams(
+      {required String title, String? originalTitle, int? year, required seasonNumber, required episodeNumber, required String mediaType}) async {
+    return _onlineApi.getVideoSteams(title: title,
+        originalTitle: originalTitle,
+        year: year,
+        seasonNumber: seasonNumber,
+        episodeNumber: episodeNumber,
+        mediaType: mediaType);
   }
 }

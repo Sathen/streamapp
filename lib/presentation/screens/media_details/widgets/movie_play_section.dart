@@ -85,7 +85,7 @@ class MoviePlaySection extends StatelessWidget {
     final title =
         isOnlineMedia
             ? provider.onlineMediaData?.title ?? 'Unknown'
-            : provider.mediaData?.title ?? 'Unknown';
+            : provider.tmdbMediaData?.title ?? 'Unknown';
 
     return SizedBox(
       width: double.infinity,
@@ -250,7 +250,7 @@ class MoviePlaySection extends StatelessWidget {
   }
 
   Future<void> _handleTmdbPlay(BuildContext context) async {
-    final mediaData = provider.mediaData;
+    final mediaData = provider.tmdbMediaData;
     if (mediaData == null || tmdbId == null) {
       throw Exception('No media data available');
     }

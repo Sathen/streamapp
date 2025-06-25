@@ -10,6 +10,7 @@ class OnlineMediaSeasonsList extends StatefulWidget {
   final void Function(
     OnlineMediaDetailsSeasons season,
     OnlineMediaDetailsEpisode episode,
+    int year,
     String? embedUrl,
     String? contentTitle,
   )
@@ -219,7 +220,7 @@ class _OnlineMediaSeasonsListState extends State<OnlineMediaSeasonsList>
   ) {
     if (season is OnlineMediaDetailsSeasons &&
         episode is OnlineMediaDetailsEpisode) {
-      widget.onEpisodeTap(season, episode, embedUrl, contentTitle);
+      widget.onEpisodeTap(season, episode, widget.mediaDetails.year, embedUrl, contentTitle);
     } else {
       // Enhanced error handling with user feedback
       debugPrint(

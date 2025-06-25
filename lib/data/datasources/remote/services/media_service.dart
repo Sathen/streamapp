@@ -173,9 +173,9 @@ class MediaService {
 
   // --- New TMDB Detail Methods ---
 
-  Future<MovieDetails> fetchMovieDetails(int movieId) async {
+  Future<TmdbMovieDetails> fetchMovieDetails(int movieId) async {
     final data = await _fetchTmdbItem('/movie/$movieId');
-    return MovieDetails.fromJson(data);
+    return TmdbMovieDetails.fromJson(data);
   }
 
   Future<TVDetails> fetchTVDetails(int tvId) async {

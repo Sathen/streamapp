@@ -10,6 +10,7 @@ abstract class TmdbMediaDetails implements GenericMediaData {
   final String overview;
   @override
   final String title;
+  @override
   final String? originalTitle;
   @override
   final String? posterPath;
@@ -32,9 +33,11 @@ abstract class TmdbMediaDetails implements GenericMediaData {
     required this.genres,
     required this.productionCompanies,
   });
+
+  @override
+  double get rating => voteAverage;
 }
 
-// TVDetails extends TmdbMediaDetails, so it also implements GenericMediaData
 class TVDetails extends TmdbMediaDetails {
   final String firstAirDate;
   final List<String> episodeRunTime;
@@ -86,6 +89,10 @@ class TVDetails extends TmdbMediaDetails {
 
   @override
   String get tmdbId => id.toString();
+
+  @override
+  int get year => DateTime.parse(firstAirDate).year;
+
 }
 
 class TVSeasonSummary {
@@ -201,11 +208,11 @@ class TVSeasonDetails implements GenericSeason {
   String get title => name;
 }
 
-class MovieDetails extends TmdbMediaDetails {
+class TmdbMovieDetails extends TmdbMediaDetails {
   final String releaseDate;
   final int runtime;
 
-  MovieDetails({
+  TmdbMovieDetails({
     required super.id,
     required super.title,
     required super.originalTitle,
@@ -220,8 +227,8 @@ class MovieDetails extends TmdbMediaDetails {
     required super.productionCompanies,
   });
 
-  factory MovieDetails.fromJson(Map<String, dynamic> json) {
-    return MovieDetails(
+  factory TmdbMovieDetails.fromJson(Map<String, dynamic> json) {
+    return TmdbMovieDetails(
       id: json['id'],
       title: json['title'] ?? json['original_title'] ?? '',
       originalTitle: json['original_title'] ?? json['title'] ?? '',
@@ -246,6 +253,9 @@ class MovieDetails extends TmdbMediaDetails {
   @override
   // TODO: implement tmdbId
   String get tmdbId => super.id.toString();
+
+  @override
+  int get year => DateTime.parse(releaseDate).year;
 }
 
 class Genre {

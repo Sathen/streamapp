@@ -85,7 +85,7 @@ class MediaProvider extends EnhancedBaseProvider {
   }
 
   /// Load movie details with proper error handling
-  Future<Result<MovieDetails>> loadMovieDetails(int tmdbId) async {
+  Future<Result<TmdbMovieDetails>> loadMovieDetails(int tmdbId) async {
     return executeOperation(() async {
       final details = await _mediaService.fetchMovieDetails(tmdbId);
       _selectedMedia = details;

@@ -8,9 +8,11 @@ class OnlineMediaDetailsEntity implements GenericMediaData {
   late String title;
   late String description;
   late List<String> cast = [];
-  late String year;
+  @override
+  late int year;
   @override
   late String tmdbId;
+  @override
   late double rating;
   @override
   late String posterPath;
@@ -24,7 +26,7 @@ class OnlineMediaDetailsEntity implements GenericMediaData {
   OnlineMediaDetailsEntity.fromJson(Map<String, dynamic> data) {
     title = data["title"];
     description = data["description"];
-    year = data["year"];
+    year = DateTime.parse(data["year"]).year;
     tmdbId = data["tmdb_id"].toString();
     rating = data["rating"];
     posterPath = data["posterPath"];
@@ -45,6 +47,9 @@ class OnlineMediaDetailsEntity implements GenericMediaData {
   String toString() {
     return jsonEncode(this);
   }
+
+  @override
+  String? get originalTitle => null;
 }
 
 class OnlineMediaDetailsEpisode implements GenericEpisode {
