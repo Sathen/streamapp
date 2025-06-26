@@ -8,12 +8,14 @@ class DownloadsAppBar extends StatelessWidget {
   final DownloadProvider downloadProvider;
   final bool isGridView;
   final VoidCallback onViewToggle;
+  final VoidCallback onBackPressed;
 
   const DownloadsAppBar({
     super.key,
     required this.downloadProvider,
     required this.isGridView,
     required this.onViewToggle,
+    required this.onBackPressed,
   });
 
   @override
@@ -31,15 +33,21 @@ class DownloadsAppBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppTheme.primaryBlue, AppTheme.accentBlue],
+          IconButton(
+            onPressed: onBackPressed,
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceBlue,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.outlineVariant, width: 1),
               ),
-              borderRadius: BorderRadius.circular(16),
+              child: Icon(
+                Icons.arrow_back_rounded,
+                color: AppTheme.highEmphasisText,
+                size: 20,
+              ),
             ),
-            child: Icon(Icons.download_rounded, size: 24, color: Colors.white),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -55,7 +63,7 @@ class DownloadsAppBar extends StatelessWidget {
                 ),
                 if (activeDownloads > 0 || downloadedFiles > 0)
                   Text(
-                    '${downloadedFiles} files${activeDownloads > 0 ? ' • $activeDownloads downloading' : ''}',
+                    '$downloadedFiles files${activeDownloads > 0 ? ' • $activeDownloads downloading' : ''}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color:
                           activeDownloads > 0
