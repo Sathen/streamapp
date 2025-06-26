@@ -111,10 +111,10 @@ class OnlineMediaDetailsSeasons implements GenericSeason {
     );
 
     if (data["episodes"] != null) {
-      episodes =
-          List.from(
-            data["episodes"],
-          ).map((ep) => OnlineMediaDetailsEpisode.fromJson(ep)).toList();
+      episodes = List.from(data["episodes"])
+                     .takeWhile((ep) => ep["embed_url"] != null)
+                     .map((ep) => OnlineMediaDetailsEpisode.fromJson(ep))
+                     .toList();
     }
   }
 

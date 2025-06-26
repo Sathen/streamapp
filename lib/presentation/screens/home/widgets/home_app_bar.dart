@@ -8,13 +8,13 @@ import '../../../providers/media/media_provider.dart';
 import 'category_selector.dart';
 
 class HomeAppBar extends StatefulWidget {
-  final bool innerBoxIsScrolled;
+  final ScrollController scrollController;
   final VoidCallback? onCategoryChanged;
   final VoidCallback? onScrollToTop;
 
   const HomeAppBar({
     super.key,
-    required this.innerBoxIsScrolled,
+    required this.scrollController,
     this.onCategoryChanged,
     this.onScrollToTop,
   });
@@ -23,243 +23,207 @@ class HomeAppBar extends StatefulWidget {
   State<HomeAppBar> createState() => _HomeAppBarState();
 }
 
-class _HomeAppBarState extends State<HomeAppBar>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _segmentedButtonController;
-  late Animation<double> _segmentedButtonAnimation;
+class _HomeAppBarState extends State<HomeAppBar> {
+  bool _isMinimized = false;
+  double _lastScrollOffset = 0.0;
+  static const double _topThreshold = 10.0; // How close to top to expand again
 
   @override
   void initState() {
     super.initState();
-    _segmentedButtonController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-
-    _segmentedButtonAnimation = CurvedAnimation(
-      parent: _segmentedButtonController,
-      curve: Curves.easeOutCubic,
-    );
-
-    _segmentedButtonController.forward();
+    widget.scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _segmentedButtonController.dispose();
+    widget.scrollController.removeListener(_onScroll);
     super.dispose();
+  }
+
+  void _onScroll() {
+    final currentOffset = widget.scrollController.offset;
+
+    // Check if we're at the very top (0-50px)
+    if (currentOffset <= _topThreshold) {
+      if (_isMinimized) {
+        setState(() {
+          _isMinimized = false;
+        });
+      }
+    }
+    // Minimize as soon as user scrolls down past the threshold
+    else if (currentOffset > _topThreshold) {
+      if (!_isMinimized) {
+        setState(() {
+          _isMinimized = true;
+        });
+      }
+    }
+
+    _lastScrollOffset = currentOffset;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Calculate opacity and scale based on scroll state
-    final scrollOpacity = widget.innerBoxIsScrolled ? 0.95 : 1.0;
-    final backgroundOpacity = widget.innerBoxIsScrolled ? 0.85 : 0.3;
-    final expandedContentOpacity = widget.innerBoxIsScrolled ? 0.0 : 1.0;
-    final categoryScale = widget.innerBoxIsScrolled ? 0.9 : 1.0;
+    // Calculate states based on minimized state
+    final expandedHeight = _isMinimized ? 80.0 : 160.0;
+    final showCollapsedContent = _isMinimized;
 
     return SliverAppBar(
-      expandedHeight: 160,
+      expandedHeight: expandedHeight,
       floating: true,
       pinned: true,
-      snap: true,
-      elevation: widget.innerBoxIsScrolled ? 4 : 0,
+      snap: false,
+      elevation: _isMinimized ? 8 : 0,
       backgroundColor:
-          widget.innerBoxIsScrolled
-              ? AppTheme.surfaceBlue.withOpacity(0.9)
+          _isMinimized
+              ? AppTheme.surfaceBlue.withOpacity(0.95)
               : Colors.transparent,
       systemOverlayStyle: SystemUiOverlayStyle.light,
 
-      // Collapsed title shows category selector instead of app name
+      // Collapsed title shows category selector when minimized
       title: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: widget.innerBoxIsScrolled ? 1.0 : 0.0,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          transform: Matrix4.identity()..scale(categoryScale),
-          child: Row(
-            children: [
-              // Small app icon for branding
-              Container(
-                padding: const EdgeInsets.all(6),
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.primaryBlue, AppTheme.accentBlue],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.movie_rounded,
-                  size: 16,
-                  color: Colors.white,
-                ),
-              ),
-              // Category selector in collapsed state
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceBlue,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppTheme.outlineVariant,
-                      width: 1,
-                    ),
-                  ),
-                  child: Consumer<MediaProvider>(
-                    builder: (context, mediaProvider, child) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: _buildCompactCategoryButton(
-                              'Movies',
-                              Icons.movie_rounded,
-                              DisplayCategory.movies,
-                              mediaProvider.selectedCategory ==
-                                  DisplayCategory.movies,
-                              () => _onCategoryTap(DisplayCategory.movies),
-                            ),
-                          ),
-                          const SizedBox(width: 2),
-                          Expanded(
-                            child: _buildCompactCategoryButton(
-                              'TV Shows',
-                              Icons.tv_rounded,
-                              DisplayCategory.tv,
-                              mediaProvider.selectedCategory ==
-                                  DisplayCategory.tv,
-                              () => _onCategoryTap(DisplayCategory.tv),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        duration: const Duration(milliseconds: 200),
+        opacity: showCollapsedContent ? 1.0 : 0.0,
+        child:
+            showCollapsedContent
+                ? _buildCollapsedTitle()
+                : const SizedBox.shrink(),
       ),
 
-      flexibleSpace: FlexibleSpaceBar(
-        background: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
+      flexibleSpace:
+          _isMinimized
+              ? null // Remove FlexibleSpaceBar completely when minimized
+              : FlexibleSpaceBar(
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.backgroundBlue,
+                        AppTheme.surfaceBlue.withOpacity(0.3),
+                      ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                      child: _buildExpandedContent(),
+                    ),
+                  ),
+                ),
+              ),
+    );
+  }
+
+  Widget _buildCollapsedTitle() {
+    return Row(
+      children: [
+        // Small app icon for branding
+        Container(
+          padding: const EdgeInsets.all(6),
+          margin: const EdgeInsets.only(right: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppTheme.backgroundBlue.withOpacity(scrollOpacity),
-                AppTheme.surfaceBlue.withOpacity(backgroundOpacity),
-              ],
+              colors: [AppTheme.primaryBlue, AppTheme.accentBlue],
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.movie_rounded, size: 16, color: Colors.white),
+        ),
+        // Category selector in collapsed state
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceBlue,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.outlineVariant, width: 1),
+            ),
+            child: Consumer<MediaProvider>(
+              builder: (context, mediaProvider, child) {
+                return Row(
+                  children: [
+                    Expanded(
+                      child: _buildCompactCategoryButton(
+                        'Movies',
+                        Icons.movie_rounded,
+                        DisplayCategory.movies,
+                        mediaProvider.selectedCategory ==
+                            DisplayCategory.movies,
+                        () => _onCategoryTap(DisplayCategory.movies),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Expanded(
+                      child: _buildCompactCategoryButton(
+                        'TV Shows',
+                        Icons.tv_rounded,
+                        DisplayCategory.tv,
+                        mediaProvider.selectedCategory == DisplayCategory.tv,
+                        () => _onCategoryTap(DisplayCategory.tv),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpandedContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // App title section
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppTheme.primaryBlue, AppTheme.accentBlue],
+                ),
+                borderRadius: BorderRadius.circular(50),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryBlue.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.movie_rounded,
+                size: 28,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // App title section (hidden when scrolled)
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: expandedContentOpacity,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      transform: Matrix4.translationValues(
-                        0,
-                        widget.innerBoxIsScrolled ? -20 : 0,
-                        0,
-                      ),
-                      child: Row(
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppTheme.primaryBlue,
-                                  AppTheme.accentBlue,
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(50),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primaryBlue.withOpacity(
-                                    widget.innerBoxIsScrolled ? 0.1 : 0.3,
-                                  ),
-                                  blurRadius:
-                                      widget.innerBoxIsScrolled ? 6 : 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.movie_rounded,
-                              size: 28,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                AnimatedDefaultTextStyle(
-                                  duration: const Duration(milliseconds: 300),
-                                  style:
-                                      Theme.of(
-                                        context,
-                                      ).textTheme.titleLarge?.copyWith(
-                                        color: AppTheme.highEmphasisText
-                                            .withOpacity(
-                                              expandedContentOpacity,
-                                            ),
-                                        fontWeight: FontWeight.bold,
-                                      ) ??
-                                      const TextStyle(),
-                                  child: const Text('Streaming App'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Category selector with scroll-based animation (hidden when scrolled)
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 300),
-                    opacity: expandedContentOpacity,
-                    child: AnimatedBuilder(
-                      animation: _segmentedButtonAnimation,
-                      builder: (context, child) {
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          transform:
-                              Matrix4.identity()..scale(
-                                _segmentedButtonAnimation.value,
-                                _segmentedButtonAnimation.value,
-                              ),
-                          child: CategorySelector(
-                            onCategoryChanged: widget.onCategoryChanged,
-                          ),
-                        );
-                      },
+                  Text(
+                    'Streaming App',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: AppTheme.highEmphasisText,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
-      ),
+        const SizedBox(height: 20),
+        // Category selector
+        CategorySelector(onCategoryChanged: widget.onCategoryChanged),
+      ],
     );
   }
 
@@ -275,8 +239,7 @@ class _HomeAppBarState extends State<HomeAppBar>
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
             gradient:
@@ -336,7 +299,14 @@ class _HomeAppBarState extends State<HomeAppBar>
     // Update the MediaProvider with the selected category
     context.read<MediaProvider>().setSelectedCategory(category);
 
-    // Scroll to top and notify parent
+    // Scroll to top when category changes
+    widget.scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+    );
+
+    // Notify parent
     widget.onScrollToTop?.call();
     widget.onCategoryChanged?.call();
   }

@@ -207,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 slivers: [
                   // Use HomeAppBar instead of custom app bar
                   HomeAppBar(
-                    innerBoxIsScrolled: _innerBoxIsScrolled,
+                    scrollController: _scrollController,
                     onCategoryChanged: _onCategoryChanged,
                     onScrollToTop: _scrollToTop,
                   ),
