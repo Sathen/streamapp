@@ -1,12 +1,11 @@
-// lib/presentation/screens/jellyfin/jellyfin_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:stream_flutter/presentation/screens/jellyfin/widgets/jellyfin_search.dart';
+import 'package:stream_flutter/data/models/models/jellyfin_models.dart';
+import 'package:stream_flutter/presentation/screens/jellyfin/widgets/jellyfin_media_card.dart';
 import 'package:stream_flutter/presentation/screens/video_player/video_player_screen.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../data/models/models/media_item.dart';
 import '../../../data/models/models/tmdb_models.dart';
 import '../../providers/jellyfin/jellyfin_auth_provider.dart';
 import '../../providers/jellyfin/jellyfin_data_provider.dart';
@@ -275,7 +274,7 @@ class _JellyfinScreenState extends State<JellyfinScreen>
 
   Widget _buildHorizontalSection(
     String title,
-    List<MediaItem> items, {
+    List<JellyfinMediaItem> items, {
     bool showProgress = false,
     bool isLoading = false,
     String? error,
@@ -370,122 +369,20 @@ class _JellyfinScreenState extends State<JellyfinScreen>
   }
 
   Widget _buildMediaCard(
-    MediaItem item,
+    JellyfinMediaItem item,
     JellyfinDataProvider dataProvider, {
     bool showProgress = false,
   }) {
-    final theme = Theme.of(context);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () => _playItem(item, dataProvider),
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Poster
-            Expanded(
-              flex: 3,
-              child: Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      color: theme.colorScheme.surfaceVariant,
-                    ),
-                    child:
-                        item.posterPath != null
-                            ? ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(12),
-                              ),
-                              child: Image.network(
-                                item.posterPath!,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (context, error, stackTrace) =>
-                                        _buildPlaceholderImage(item),
-                              ),
-                            )
-                            : _buildPlaceholderImage(item),
-                  ),
-                ],
-              ),
-            ),
-
-            // Progress bar
-            if (showProgress && item.progress != null)
-              LinearProgressIndicator(
-                value: item.progress! / 100.0,
-                backgroundColor: theme.colorScheme.surfaceVariant,
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentBlue),
-              ),
-
-            // Content info
-            Expanded(
-              flex: 1,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.name,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (item.type != MediaType.unknown) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getMediaTypeColor(
-                            item.type,
-                          ).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          _getMediaTypeDisplay(item.type),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: _getMediaTypeColor(item.type),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return JellyfinMediaCard(
+      item: item,
+      dataProvider: dataProvider,
+      showProgress: showProgress,
     );
   }
 
   Widget _buildLibraryCard(
     String libraryName,
-    List<MediaItem> items,
+    List<JellyfinMediaItem> items,
     JellyfinDataProvider dataProvider,
   ) {
     final theme = Theme.of(context);
@@ -764,23 +661,7 @@ class _JellyfinScreenState extends State<JellyfinScreen>
     );
   }
 
-  Widget _buildPlaceholderImage(MediaItem item) {
-    final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-      ),
-      child: Center(
-        child: Icon(
-          _getMediaTypeIcon(item.type),
-          size: 32,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
 
   Widget _buildFloatingActionButton(JellyfinDataProvider dataProvider) {
     return FloatingActionButton.extended(
@@ -833,7 +714,7 @@ class _JellyfinScreenState extends State<JellyfinScreen>
   }
 
   VideoPlayerScreen _playItem(
-    MediaItem item,
+    JellyfinMediaItem item,
     JellyfinDataProvider dataProvider,
   ) {
     // Get stream URL and play the content

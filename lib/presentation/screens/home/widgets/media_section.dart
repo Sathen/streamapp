@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stream_flutter/data/models/models/tmdb_models.dart';
 import '../../../../data/models/models/media_item.dart';
 
 class MediaSection extends StatefulWidget {
   final String title;
-  final List<MediaItem> items;
+  final List<TmdbMediaItem> items;
   final VoidCallback? onSeeAll;
 
   const MediaSection({
@@ -142,7 +143,7 @@ class _MediaSectionState extends State<MediaSection>
     );
   }
 
-  Widget _buildMediaCard(BuildContext context, MediaItem item, int index) {
+  Widget _buildMediaCard(BuildContext context, TmdbMediaItem item, int index) {
     final theme = Theme.of(context);
 
     return GestureDetector(
@@ -154,7 +155,6 @@ class _MediaSectionState extends State<MediaSection>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Hero(
-              // FIXED: Create unique hero tag that includes section ID, item ID, and index
               tag: 'media_${item.id}_section_${_sectionId}_index_${index}',
               child: _buildPosterCard(context, item, theme),
             ),
@@ -166,7 +166,7 @@ class _MediaSectionState extends State<MediaSection>
     );
   }
 
-  Widget _buildPosterCard(BuildContext context, MediaItem item, ThemeData theme) {
+  Widget _buildPosterCard(BuildContext context, TmdbMediaItem item, ThemeData theme) {
     return Container(
       height: 200,
       decoration: BoxDecoration(
@@ -231,38 +231,6 @@ class _MediaSectionState extends State<MediaSection>
               child: _buildQualityBadge(theme),
             ),
 
-            // Enhanced Play Icon with theme integration
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.secondary,
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                    BoxShadow(
-                      color: theme.colorScheme.shadow.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.white, // Always white for best contrast on gradient
-                  size: 28,
-                ),
-              ),
-            ),
           ],
         ),
       ),

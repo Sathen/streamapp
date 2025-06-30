@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:stream_flutter/presentation/screens/jellyfin/widgets/jellyfin_image_widget.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../data/models/models/media_item.dart';
+import '../../../../data/models/models/jellyfin_models.dart';
 import '../../../../data/models/models/tmdb_models.dart';
 import '../../../providers/jellyfin/jellyfin_data_provider.dart';
 
 class JellyfinMediaCard extends StatelessWidget {
-  final MediaItem item;
+  final JellyfinMediaItem item;
   final JellyfinDataProvider dataProvider;
   final VoidCallback? onTap;
   final bool showProgress;
@@ -46,6 +47,7 @@ class JellyfinMediaCard extends StatelessWidget {
             Expanded(
               flex: 3,
               child: Stack(
+                fit: StackFit.expand,
                 children: [
                   Container(
                     width: double.infinity,
@@ -53,91 +55,14 @@ class JellyfinMediaCard extends StatelessWidget {
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(12),
                       ),
-                      color: theme.colorScheme.surfaceVariant,
+                      color: theme.colorScheme.surfaceContainerHighest,
                     ),
-                    child:
-                        item.posterPath != null
-                            ? ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(12),
-                              ),
-                              child: Image.network(
-                                item.posterPath!,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (context, error, stackTrace) =>
-                                        _buildPlaceholder(theme),
-                              ),
-                            )
-                            : _buildPlaceholder(theme),
+                    child: JellyfinImageWidget(item: item, type: 'Primary'),
                   ),
 
-                  if (showFavoriteIcon)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: () => dataProvider.toggleFavorite(item),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            dataProvider.isFavorite(item.id)
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            color: AppTheme.errorColor,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.center,
-                          end: Alignment.center,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.3),
-                          ],
-                        ),
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Icon(
-                            Icons.play_arrow_rounded,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
-
-            // Progress bar
-            if (showProgress && item.progress != null)
-              LinearProgressIndicator(
-                value: item.progress! / 100.0,
-                backgroundColor: theme.colorScheme.surfaceVariant,
-                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentBlue),
-              ),
 
             // Content info
             Expanded(
@@ -152,7 +77,7 @@ class JellyfinMediaCard extends StatelessWidget {
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 2,
+                      softWrap: true,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),

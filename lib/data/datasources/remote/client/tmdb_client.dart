@@ -56,49 +56,49 @@ class TmdbClient {
     }
   }
 
-  Future<List<MediaItem>> fetchNowPlayingMovies() async {
+  Future<List<TmdbMediaItem>> fetchNowPlayingMovies() async {
     final data = await _fetchTmdbList('/movie/now_playing');
-    return data.map((json) => MediaItem.fromTmdbJson(json, MediaType.movie)).toList();
+    return data.map((json) => TmdbMediaItem.fromTmdbJson(json, MediaType.movie)).toList();
   }
 
-  Future<List<MediaItem>> fetchPopularMovies() async {
+  Future<List<TmdbMediaItem>> fetchPopularMovies() async {
     final data = await _fetchTmdbList('/movie/popular');
-    return data.map((json) => MediaItem.fromTmdbJson(json, MediaType.movie)).toList();
+    return data.map((json) => TmdbMediaItem.fromTmdbJson(json, MediaType.movie)).toList();
   }
 
-  Future<List<MediaItem>> fetchTopRatedMovies() async {
+  Future<List<TmdbMediaItem>> fetchTopRatedMovies() async {
     final data = await _fetchTmdbList('/movie/top_rated');
-    return data.map((json) => MediaItem.fromTmdbJson(json, MediaType.movie)).toList();
+    return data.map((json) => TmdbMediaItem.fromTmdbJson(json, MediaType.movie)).toList();
   }
 
-  Future<List<MediaItem>> fetchNewestMovies({int voteCountGte = 100}) async {
+  Future<List<TmdbMediaItem>> fetchNewestMovies({int voteCountGte = 100}) async {
     final today = DateTime.now().toIso8601String().split('T').first;
     final data = await _fetchTmdbList('/discover/movie', {
       'sort_by': 'release_date.desc',
       'primary_release_date.lte': today,
       'vote_count.gte': '$voteCountGte',
     });
-    return data.map((json) => MediaItem.fromTmdbJson(json, MediaType.movie)).toList();
+    return data.map((json) => TmdbMediaItem.fromTmdbJson(json, MediaType.movie)).toList();
   }
 
-  Future<List<MediaItem>> fetchPopularTV() async {
+  Future<List<TmdbMediaItem>> fetchPopularTV() async {
     final data = await _fetchTmdbList('/tv/popular');
-    return data.map((json) => MediaItem.fromTmdbJson(json, MediaType.tv)).toList();
+    return data.map((json) => TmdbMediaItem.fromTmdbJson(json, MediaType.tv)).toList();
   }
 
-  Future<List<MediaItem>> fetchTopRatedTV() async {
+  Future<List<TmdbMediaItem>> fetchTopRatedTV() async {
     final data = await _fetchTmdbList('/tv/top_rated');
-    return data.map((json) => MediaItem.fromTmdbJson(json, MediaType.tv)).toList();
+    return data.map((json) => TmdbMediaItem.fromTmdbJson(json, MediaType.tv)).toList();
   }
 
-  Future<List<MediaItem>> fetchNewestTV({int voteCountGte = 100}) async {
+  Future<List<TmdbMediaItem>> fetchNewestTV({int voteCountGte = 100}) async {
     final today = DateTime.now().toIso8601String().split('T').first;
     final data = await _fetchTmdbList('/discover/tv', {
       'sort_by': 'first_air_date.desc',
       'first_air_date.lte': today,
       'vote_count.gte': '$voteCountGte',
     });
-    return data.map((json) => MediaItem.fromTmdbJson(json, MediaType.tv)).toList();
+    return data.map((json) => TmdbMediaItem.fromTmdbJson(json, MediaType.tv)).toList();
   }
 
   // --- New TMDB Detail Methods ---

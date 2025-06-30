@@ -1,5 +1,6 @@
 // lib/models/tmdb_models.dart
 import 'package:flutter/material.dart';
+import 'package:stream_flutter/data/models/models/media_item.dart';
 
 import 'generic_media_details.dart'; // Often needed for @required or similar annotations
 
@@ -92,7 +93,6 @@ class TVDetails extends TmdbMediaDetails {
 
   @override
   int get year => DateTime.parse(firstAirDate).year;
-
 }
 
 class TVSeasonSummary {
@@ -256,6 +256,35 @@ class TmdbMovieDetails extends TmdbMediaDetails {
 
   @override
   int get year => DateTime.parse(releaseDate).year;
+}
+
+class TmdbMediaItem extends MediaItem {
+  TmdbMediaItem({
+    required super.id,
+    required super.name,
+    required super.type,
+    required super.posterPath,
+    required super.progress,
+    super.rating,
+  });
+
+  factory TmdbMediaItem.fromTmdbJson(
+      Map<String, dynamic> json,
+      MediaType mediaType,
+      ) {
+    final id = json['id'].toString();
+    final name = json['title'] ?? json['name'] ?? 'Unknown';
+    final rating = (json['vote_average'] as num?)?.toDouble();
+
+    return TmdbMediaItem(
+      id: id,
+      name: name,
+      type: mediaType,
+      rating: rating,
+      progress: null,
+      posterPath: 'https://image.tmdb.org/t/p/w500${json['poster_path']}'
+    );
+  }
 }
 
 class Genre {

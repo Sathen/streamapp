@@ -17,15 +17,15 @@ class MediaProvider extends EnhancedBaseProvider {
   DisplayCategory _selectedCategory = DisplayCategory.movies;
 
   // Movies
-  List<MediaItem> _nowPlayingMovies = [];
-  List<MediaItem> _popularMovies = [];
-  List<MediaItem> _topRatedMovies = [];
-  List<MediaItem> _newestMovies = [];
+  List<TmdbMediaItem> _nowPlayingMovies = [];
+  List<TmdbMediaItem> _popularMovies = [];
+  List<TmdbMediaItem> _topRatedMovies = [];
+  List<TmdbMediaItem> _newestMovies = [];
 
   // TV Shows
-  List<MediaItem> _popularTV = [];
-  List<MediaItem> _topRatedTV = [];
-  List<MediaItem> _newestTV = [];
+  List<TmdbMediaItem> _popularTV = [];
+  List<TmdbMediaItem> _topRatedTV = [];
+  List<TmdbMediaItem> _newestTV = [];
 
   // Details
   TmdbMediaDetails? _selectedMedia;
@@ -34,19 +34,19 @@ class MediaProvider extends EnhancedBaseProvider {
   // Getters
   DisplayCategory get selectedCategory => _selectedCategory;
 
-  List<MediaItem> get nowPlayingMovies => List.unmodifiable(_nowPlayingMovies);
+  List<TmdbMediaItem> get nowPlayingMovies => List.unmodifiable(_nowPlayingMovies);
 
-  List<MediaItem> get popularMovies => List.unmodifiable(_popularMovies);
+  List<TmdbMediaItem> get popularMovies => List.unmodifiable(_popularMovies);
 
-  List<MediaItem> get topRatedMovies => List.unmodifiable(_topRatedMovies);
+  List<TmdbMediaItem> get topRatedMovies => List.unmodifiable(_topRatedMovies);
 
-  List<MediaItem> get newestMovies => List.unmodifiable(_newestMovies);
+  List<TmdbMediaItem> get newestMovies => List.unmodifiable(_newestMovies);
 
-  List<MediaItem> get popularTV => List.unmodifiable(_popularTV);
+  List<TmdbMediaItem> get popularTV => List.unmodifiable(_popularTV);
 
-  List<MediaItem> get topRatedTV => List.unmodifiable(_topRatedTV);
+  List<TmdbMediaItem> get topRatedTV => List.unmodifiable(_topRatedTV);
 
-  List<MediaItem> get newestTV => List.unmodifiable(_newestTV);
+  List<TmdbMediaItem> get newestTV => List.unmodifiable(_newestTV);
 
   TmdbMediaDetails? get selectedMedia => _selectedMedia;
 
@@ -72,13 +72,13 @@ class MediaProvider extends EnhancedBaseProvider {
 
       if (results.isSuccess) {
         final data = results.data!;
-        _nowPlayingMovies = data[0] as List<MediaItem>;
-        _popularMovies = data[1] as List<MediaItem>;
-        _topRatedMovies = data[2] as List<MediaItem>;
-        _newestMovies = data[3] as List<MediaItem>;
-        _popularTV = data[4] as List<MediaItem>;
-        _topRatedTV = data[5] as List<MediaItem>;
-        _newestTV = data[6] as List<MediaItem>;
+        _nowPlayingMovies = data[0];
+        _popularMovies = data[1];
+        _topRatedMovies = data[2];
+        _newestMovies = data[3];
+        _popularTV = data[4];
+        _topRatedTV = data[5];
+        _newestTV = data[6];
         safeNotifyListeners();
       }
     }, errorPrefix: 'Failed to load media data');
@@ -117,7 +117,7 @@ class MediaProvider extends EnhancedBaseProvider {
   }
 
   /// Refresh specific category data
-  Future<Result<List<MediaItem>>> refreshCategory(
+  Future<Result<List<TmdbMediaItem>>> refreshCategory(
     DisplayCategory category,
   ) async {
     switch (category) {

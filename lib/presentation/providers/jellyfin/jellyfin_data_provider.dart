@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stream_flutter/data/models/models/jellyfin_models.dart';
 
 import '../../../core/di/service_locator.dart';
 import '../../../data/datasources/remote/services/jellyfin_service.dart';
@@ -11,7 +12,6 @@ class JellyfinDataProvider extends BaseProvider {
   final JellyfinAuthProvider _authProvider;
 
   JellyfinDataProvider(this._authProvider) {
-    // Listen to auth changes
     _authProvider.addListener(_onAuthChanged);
   }
 
@@ -26,11 +26,11 @@ class JellyfinDataProvider extends BaseProvider {
   // ===========================
 
   // Content cache
-  List<MediaItem> _continueWatching = [];
-  List<MediaItem> _recentlyAdded = [];
-  Map<String, List<MediaItem>> _libraries = {};
-  List<MediaItem> _favorites = [];
-  List<MediaItem> _nextUpEpisodes = [];
+  List<JellyfinMediaItem> _continueWatching = [];
+  List<JellyfinMediaItem> _recentlyAdded = [];
+  Map<String, List<JellyfinMediaItem>> _libraries = {};
+  List<JellyfinMediaItem> _favorites = [];
+  List<JellyfinMediaItem> _nextUpEpisodes = [];
   Map<String, dynamic>? _serverStats;
 
   // Loading states for different sections
@@ -57,15 +57,15 @@ class JellyfinDataProvider extends BaseProvider {
   // ===========================
 
   // Content data
-  List<MediaItem> get continueWatching => List.unmodifiable(_continueWatching);
+  List<JellyfinMediaItem> get continueWatching => List.unmodifiable(_continueWatching);
 
-  List<MediaItem> get recentlyAdded => List.unmodifiable(_recentlyAdded);
+  List<JellyfinMediaItem> get recentlyAdded => List.unmodifiable(_recentlyAdded);
 
-  Map<String, List<MediaItem>> get libraries => Map.unmodifiable(_libraries);
+  Map<String, List<JellyfinMediaItem>> get libraries => Map.unmodifiable(_libraries);
 
-  List<MediaItem> get favorites => List.unmodifiable(_favorites);
+  List<JellyfinMediaItem> get favorites => List.unmodifiable(_favorites);
 
-  List<MediaItem> get nextUpEpisodes => List.unmodifiable(_nextUpEpisodes);
+  List<JellyfinMediaItem> get nextUpEpisodes => List.unmodifiable(_nextUpEpisodes);
 
   Map<String, dynamic>? get serverStats => _serverStats;
 
@@ -287,7 +287,7 @@ class JellyfinDataProvider extends BaseProvider {
   // ===========================
 
   /// Toggle favorite with optimistic UI update
-  Future<void> toggleFavorite(MediaItem item) async {
+  Future<void> toggleFavorite(JellyfinMediaItem item) async {
     if (!canLoadData) return;
 
     final wasOriginallyFavorite = isFavorite(item.id);
@@ -445,8 +445,8 @@ class JellyfinDataProvider extends BaseProvider {
   }
 
   /// Get combined recent activity for dashboard
-  List<MediaItem> getRecentActivity({int limit = 20}) {
-    final combined = <String, MediaItem>{};
+  List<JellyfinMediaItem> getRecentActivity({int limit = 20}) {
+    final combined = <String, JellyfinMediaItem>{};
 
     // Priority: Continue watching first
     for (final item in _continueWatching) {
@@ -538,7 +538,4 @@ class JellyfinDataProvider extends BaseProvider {
     return now.difference(lastRefresh) > maxAge;
   }
 
-  String getImageUrl(itemId, type) {
-
-  }
 }

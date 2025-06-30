@@ -1,3 +1,6 @@
+import 'package:stream_flutter/data/models/models/media_item.dart';
+import 'package:stream_flutter/data/models/models/tmdb_models.dart';
+
 class JellyfinAuthException implements Exception {
   final String message;
   final int? statusCode;
@@ -62,6 +65,33 @@ class JellyfinUser {
       hasConfiguredPassword: json['HasConfiguredPassword'] ?? false,
       hasConfiguredEasyPassword: json['HasConfiguredEasyPassword'] ?? false,
       enableAutoLogin: json['EnableAutoLogin'] ?? false,
+    );
+  }
+}
+
+class JellyfinMediaItem extends MediaItem {
+
+  JellyfinMediaItem({
+    required super.id,
+    required super.name,
+    required super.type,
+    required posterPath,
+    required logoPath,
+    required thumdbPath,
+    required progress,
+    required rating,
+  });
+
+  factory JellyfinMediaItem.fromJson(Map<String, dynamic> json) {
+    return JellyfinMediaItem(
+      id: json['Id'] ?? '',
+      name: json['Name'] ?? 'Unknown',
+      posterPath: json['ImageTags']?['Primary'],
+      logoPath: json['ImageTags']?['Logo'],
+      thumdbPath: json['ImageTags']?['Thumb'],
+      progress: null,
+      type: MediaType.unknown,
+      rating: null,
     );
   }
 }

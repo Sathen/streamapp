@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:http/http.dart' as http;
 import 'package:stream_flutter/data/datasources/remote/client/jellyfin_auth_client.dart';
+import 'package:stream_flutter/data/models/models/jellyfin_models.dart';
 
 import '../../../models/models/media_item.dart';
 
@@ -22,13 +23,13 @@ class JellyfinService {
   JellyfinService(this._authService);
 
   // Helper method to get auth headers
-  Map<String, String> get _headers => _authService.getAuthHeaders();
+  Map<String, String> get headers => _authService.getAuthHeaders();
 
   String? get _serverUrl => _authService.serverUrl;
 
   String? get _userId => _authService.userId;
 
-  Future<List<MediaItem>> fetchContinueWatching({int limit = 12}) async {
+  Future<List<JellyfinMediaItem>> fetchContinueWatching({int limit = 12}) async {
     _ensureAuthenticated();
 
     try {
@@ -37,7 +38,7 @@ class JellyfinService {
             Uri.parse(
               '$_serverUrl/Users/$_userId/Items/Resume?Limit=$limit&Fields=BasicSyncInfo,CanDelete,PrimaryImageAspectRatio,ProductionYear',
             ),
-            headers: _headers,
+            headers: headers,
           )
           .timeout(const Duration(seconds: 15));
 
@@ -45,7 +46,7 @@ class JellyfinService {
         final data = json.decode(response.body);
         final items =
             (data['Items'] as List? ?? [])
-                .map((item) => MediaItem.fromJson(item))
+                .map((item) => JellyfinMediaItem.fromJson(item))
                 .toList();
 
         developer.log('Fetched ${items.length} continue watching items');
@@ -64,7 +65,7 @@ class JellyfinService {
   }
 
   /// Fetch recently added items
-  Future<List<MediaItem>> fetchRecentlyAdded({int limit = 16}) async {
+  Future<List<JellyfinMediaItem>> fetchRecentlyAdded({int limit = 16}) async {
     _ensureAuthenticated();
 
     try {
@@ -73,13 +74,13 @@ class JellyfinService {
             Uri.parse(
               '$_serverUrl/Users/$_userId/Items/Latest?Limit=$limit&Fields=BasicSyncInfo,CanDelete,PrimaryImageAspectRatio,ProductionYear',
             ),
-            headers: _headers,
+            headers: headers,
           )
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as List;
-        final items = data.map((item) => MediaItem.fromJson(item)).toList();
+        final items = data.map((item) => JellyfinMediaItem.fromJson(item)).toList();
 
         developer.log('Fetched ${items.length} recently added items');
         return items;
@@ -97,13 +98,13 @@ class JellyfinService {
   }
 
   /// Fetch all libraries/views
-  Future<Map<String, List<MediaItem>>> fetchLibraries() async {
+  Future<Map<String, List<JellyfinMediaItem>>> fetchLibraries() async {
     _ensureAuthenticated();
 
     try {
       // First get the views/libraries
       final viewsResponse = await http
-          .get(Uri.parse('$_serverUrl/Users/$_userId/Views'), headers: _headers)
+          .get(Uri.parse('$_serverUrl/Users/$_userId/Views'), headers: headers)
           .timeout(const Duration(seconds: 15));
 
       if (viewsResponse.statusCode != 200) {
@@ -116,7 +117,7 @@ class JellyfinService {
       final viewsData = json.decode(viewsResponse.body);
       final views = viewsData['Items'] as List? ?? [];
 
-      final libraries = <String, List<MediaItem>>{};
+      final libraries = <String, List<JellyfinMediaItem>>{};
 
       // Fetch items for each library
       for (final view in views) {
@@ -129,7 +130,7 @@ class JellyfinService {
                 Uri.parse(
                   '$_serverUrl/Users/$_userId/Items?ParentId=$viewId&Limit=20&Fields=BasicSyncInfo,CanDelete,PrimaryImageAspectRatio,ProductionYear&SortBy=SortName&SortOrder=Ascending',
                 ),
-                headers: _headers,
+                headers: headers,
               )
               .timeout(const Duration(seconds: 10));
 
@@ -137,7 +138,7 @@ class JellyfinService {
             final itemsData = json.decode(itemsResponse.body);
             final items =
                 (itemsData['Items'] as List? ?? [])
-                    .map((item) => MediaItem.fromJson(item))
+                    .map((item) => JellyfinMediaItem.fromJson(item))
                     .toList();
 
             libraries[viewName] = items;
@@ -161,7 +162,7 @@ class JellyfinService {
   }
 
   /// Fetch specific library content with pagination
-  Future<List<MediaItem>> fetchLibraryContent(
+  Future<List<JellyfinMediaItem>> fetchLibraryContent(
     String libraryId, {
     int startIndex = 0,
     int limit = 50,
@@ -191,14 +192,14 @@ class JellyfinService {
         '$_serverUrl/Users/$_userId/Items',
       ).replace(queryParameters: params);
       final response = await http
-          .get(uri, headers: _headers)
+          .get(uri, headers: headers)
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final items =
             (data['Items'] as List? ?? [])
-                .map((item) => MediaItem.fromJson(item))
+                .map((item) => JellyfinMediaItem.fromJson(item))
                 .toList();
 
         developer.log('Fetched ${items.length} items for library $libraryId');
@@ -217,7 +218,7 @@ class JellyfinService {
   }
 
   /// Search content across all libraries
-  Future<List<MediaItem>> searchContent(String query, {int limit = 50}) async {
+  Future<List<JellyfinMediaItem>> searchContent(String query, {int limit = 50}) async {
     _ensureAuthenticated();
 
     if (query.trim().isEmpty) return [];
@@ -236,14 +237,14 @@ class JellyfinService {
         '$_serverUrl/Users/$_userId/Items',
       ).replace(queryParameters: params);
       final response = await http
-          .get(uri, headers: _headers)
+          .get(uri, headers: headers)
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final items =
             (data['Items'] as List? ?? [])
-                .map((item) => MediaItem.fromJson(item))
+                .map((item) => JellyfinMediaItem.fromJson(item))
                 .toList();
 
         developer.log('Found ${items.length} search results for: $query');
@@ -262,7 +263,7 @@ class JellyfinService {
   }
 
   /// Get item details
-  Future<MediaItem?> getItemDetails(String itemId) async {
+  Future<JellyfinMediaItem?> getItemDetails(String itemId) async {
     _ensureAuthenticated();
 
     try {
@@ -271,13 +272,13 @@ class JellyfinService {
             Uri.parse(
               '$_serverUrl/Users/$_userId/Items/$itemId?Fields=BasicSyncInfo,CanDelete,PrimaryImageAspectRatio,ProductionYear,Overview,Genres,Studios,People',
             ),
-            headers: _headers,
+            headers: headers,
           )
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return MediaItem.fromJson(data);
+        return JellyfinMediaItem.fromJson(data);
       } else if (response.statusCode == 404) {
         return null;
       } else {
@@ -294,7 +295,7 @@ class JellyfinService {
   }
 
   /// Get favorites
-  Future<List<MediaItem>> getFavorites({int limit = 50}) async {
+  Future<List<JellyfinMediaItem>> getFavorites({int limit = 50}) async {
     _ensureAuthenticated();
 
     try {
@@ -310,14 +311,14 @@ class JellyfinService {
         '$_serverUrl/Users/$_userId/Items',
       ).replace(queryParameters: params);
       final response = await http
-          .get(uri, headers: _headers)
+          .get(uri, headers: headers)
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final items =
             (data['Items'] as List? ?? [])
-                .map((item) => MediaItem.fromJson(item))
+                .map((item) => JellyfinMediaItem.fromJson(item))
                 .toList();
 
         developer.log('Fetched ${items.length} favorite items');
@@ -347,8 +348,8 @@ class JellyfinService {
 
       final response =
           isFavorite
-              ? await http.post(Uri.parse(endpoint), headers: _headers)
-              : await http.delete(Uri.parse(endpoint), headers: _headers);
+              ? await http.post(Uri.parse(endpoint), headers: headers)
+              : await http.delete(Uri.parse(endpoint), headers: headers);
 
       if (response.statusCode != 200) {
         throw JellyfinException(
@@ -375,7 +376,7 @@ class JellyfinService {
       final response = await http
           .post(
             Uri.parse('$_serverUrl/Users/$_userId/PlayedItems/$itemId'),
-            headers: _headers,
+            headers: headers,
           )
           .timeout(const Duration(seconds: 10));
 
@@ -402,7 +403,7 @@ class JellyfinService {
       final response = await http
           .delete(
             Uri.parse('$_serverUrl/Users/$_userId/PlayedItems/$itemId'),
-            headers: _headers,
+            headers: headers,
           )
           .timeout(const Duration(seconds: 10));
 
@@ -439,7 +440,7 @@ class JellyfinService {
       final response = await http
           .post(
             Uri.parse('$_serverUrl/Sessions/Playing/Progress'),
-            headers: _headers,
+            headers: headers,
             body: body,
           )
           .timeout(const Duration(seconds: 10));
@@ -477,7 +478,7 @@ class JellyfinService {
       final response = await http
           .post(
             Uri.parse('$_serverUrl/Sessions/Playing'),
-            headers: _headers,
+            headers: headers,
             body: body,
           )
           .timeout(const Duration(seconds: 10));
@@ -513,7 +514,7 @@ class JellyfinService {
       final response = await http
           .post(
             Uri.parse('$_serverUrl/Sessions/Playing/Stopped'),
-            headers: _headers,
+            headers: headers,
             body: body,
           )
           .timeout(const Duration(seconds: 10));
@@ -557,6 +558,8 @@ class JellyfinService {
     return uri.toString();
   }
 
+
+
   /// Get image URL
   String getImageUrl(
     String itemId, {
@@ -579,7 +582,7 @@ class JellyfinService {
   }
 
   /// Get next up episodes for TV series
-  Future<List<MediaItem>> getNextUpEpisodes({int limit = 10}) async {
+  Future<List<JellyfinMediaItem>> getNextUpEpisodes({int limit = 10}) async {
     _ensureAuthenticated();
 
     try {
@@ -588,7 +591,7 @@ class JellyfinService {
             Uri.parse(
               '$_serverUrl/Shows/NextUp?UserId=$_userId&Limit=$limit&Fields=BasicSyncInfo,PrimaryImageAspectRatio',
             ),
-            headers: _headers,
+            headers: headers,
           )
           .timeout(const Duration(seconds: 15));
 
@@ -596,7 +599,7 @@ class JellyfinService {
         final data = json.decode(response.body);
         final items =
             (data['Items'] as List? ?? [])
-                .map((item) => MediaItem.fromJson(item))
+                .map((item) => JellyfinMediaItem.fromJson(item))
                 .toList();
 
         developer.log('Fetched ${items.length} next up episodes');
@@ -622,7 +625,7 @@ class JellyfinService {
       final response = await http
           .get(
             Uri.parse('$_serverUrl/Items/Counts?UserId=$_userId'),
-            headers: _headers,
+            headers: headers,
           )
           .timeout(const Duration(seconds: 10));
 
