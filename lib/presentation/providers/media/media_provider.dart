@@ -4,13 +4,13 @@ import 'package:provider/provider.dart';
 import '../../../core/di/service_locator.dart';
 import '../../../core/enums/display_category.dart';
 import '../../../core/utils/result.dart';
-import '../../../data/datasources/remote/services/media_service.dart';
+import '../../../data/datasources/remote/client/tmdb_client.dart';
 import '../../../data/models/models/media_item.dart';
 import '../../../data/models/models/tmdb_models.dart';
 import '../base/enhanced_base_provider.dart';
 
 class MediaProvider extends EnhancedBaseProvider {
-  MediaService get _mediaService => get<MediaService>();
+  TmdbClient get _mediaService => get<TmdbClient>();
 
 
   // State

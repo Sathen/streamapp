@@ -385,6 +385,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 icon: Icon(Icons.download_rounded),
                 label: 'Downloads',
               ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.video_library_rounded),
+                label: 'Settings',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings_rounded),
+                label: 'Settings',
+              ),
             ],
           ),
         ),
@@ -405,6 +413,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         break;
       case 3:
         context.go('/downloads');
+        break;
+      case 4:
+        context.go('/jellyfin');
+        break;
+      case 5:
+        context.go('/settings/jellyfin');
         break;
     }
   }

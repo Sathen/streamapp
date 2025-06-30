@@ -4,7 +4,7 @@ import 'package:stream_flutter/data/models/models/generic_media_details.dart';
 
 import '../../../core/di/service_locator.dart';
 import '../../../data/datasources/remote/client/online_server_api.dart';
-import '../../../data/datasources/remote/services/media_service.dart';
+import '../../../data/datasources/remote/client/tmdb_client.dart';
 import '../../../data/models/models/online_media_details_entity.dart';
 import '../../../data/models/models/search_result.dart';
 import '../../../data/models/models/tmdb_models.dart';
@@ -13,7 +13,7 @@ import '../base/base_provider.dart';
 import '../watch_history/watch_history_provider.dart';
 
 class MediaDetailsProvider extends BaseProvider {
-  final MediaService _mediaService = get<MediaService>();
+  final TmdbClient _mediaService = get<TmdbClient>();
   final OnlineServerApi _onlineApi = get<OnlineServerApi>();
 
   TmdbMediaDetails? _mediaData;

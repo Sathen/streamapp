@@ -43,9 +43,6 @@ dependencies:
   wakelock_plus: ^1.1.4
   url_launcher: ^6.1.7
   android_intent_plus: ^5.3.0
-#  modern_player: ^0.1.0
-#  chewie: ^1.11.3
-#  video_player: ^2.9.5
   flutter_vlc_player: ^7.4.3
   path_provider: ^2.1.5
   permission_handler: ^12.0.0+1
@@ -54,6 +51,8 @@ dependencies:
   shimmer: ^3.0.0
   get_it: ^8.0.3
   logger: ^2.0.2
+  device_info_plus: ^9.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

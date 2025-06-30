@@ -1,8 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:stream_flutter/presentation/providers/jellyfin/jellyfin_auth_provider.dart';
+import 'package:stream_flutter/presentation/providers/jellyfin/jellyfin_data_provider.dart';
 import 'package:stream_flutter/presentation/providers/watch_history/watch_history_provider.dart';
+import 'package:stream_flutter/presentation/screens/jellyfin/jellyfin_screen.dart';
+import 'package:stream_flutter/presentation/screens/setting/jellyfin_settings_screen.dart';
 import 'package:stream_flutter/presentation/screens/watch_history/watch_history_screen.dart';
 
 // Models
@@ -15,6 +18,7 @@ import 'presentation/providers/media/media_provider.dart';
 import 'presentation/providers/media_details/media_details_provider.dart';
 import 'presentation/providers/search/search_provider.dart';
 import 'presentation/screens/downloads/downloads_screen.dart';
+
 // Your existing screens
 import 'presentation/screens/home/home_screen.dart';
 import 'presentation/screens/media_details/online_media_details_screen.dart';
@@ -35,12 +39,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<MediaProvider>(
-          create: (_) => MediaProvider(),
-        ),
-        ChangeNotifierProvider<SearchProvider>(
-          create: (_) => SearchProvider(),
-        ),
+        ChangeNotifierProvider<MediaProvider>(create: (_) => MediaProvider()),
+        ChangeNotifierProvider<SearchProvider>(create: (_) => SearchProvider()),
         ChangeNotifierProvider<MediaDetailsProvider>(
           create: (_) => MediaDetailsProvider(),
         ),
@@ -49,6 +49,21 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<WatchHistoryProvider>(
           create: (_) => WatchHistoryProvider(), // This one is singleton
+        ),
+
+        ChangeNotifierProvider<JellyfinAuthProvider>(
+          create: (_) => JellyfinAuthProvider()..initialize(),
+        ),
+
+        // Data Provider - depends on Auth Provider for authentication state
+        ChangeNotifierProxyProvider<JellyfinAuthProvider, JellyfinDataProvider>(
+          create:
+              (context) => JellyfinDataProvider(
+                Provider.of<JellyfinAuthProvider>(context, listen: false),
+              ),
+          update: (context, authProvider, previousDataProvider) {
+            return previousDataProvider ?? JellyfinDataProvider(authProvider);
+          },
         ),
       ],
       child: MaterialApp.router(
@@ -73,7 +88,8 @@ class MyApp extends StatelessWidget {
           path: '/downloads',
           builder: (context, state) => const DownloadsScreen(),
         ),
-        GoRoute( // Add this new route
+        GoRoute(
+          // Add this new route
           path: '/history',
           builder: (context, state) => const WatchHistoryScreen(),
         ),
@@ -94,6 +110,14 @@ class MyApp extends StatelessWidget {
             final searchItem = state.extra as SearchItem;
             return OnlineMediaDetailsScreen(searchItem: searchItem);
           },
+        ),
+        GoRoute(
+          path: '/settings/jellyfin',
+          builder: (context, state) => JellyfinSettingsScreen(),
+        ),
+        GoRoute(
+          path: '/jellyfin',
+          builder: (context, state) => JellyfinScreen(),
         ),
       ],
     );
