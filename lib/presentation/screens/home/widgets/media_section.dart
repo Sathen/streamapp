@@ -155,7 +155,7 @@ class _MediaSectionState extends State<MediaSection>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Hero(
-              tag: 'media_${item.id}_section_${_sectionId}_index_${index}',
+              tag: 'media_${item.id}_section_${_sectionId}_index_$index',
               child: _buildPosterCard(context, item, theme),
             ),
             const SizedBox(height: 8),
