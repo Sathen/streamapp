@@ -4,11 +4,9 @@ import 'package:stream_flutter/presentation/screens/jellyfin/widgets/jellyfin_im
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models/jellyfin_models.dart';
 import '../../../../data/models/models/tmdb_models.dart';
-import '../../../providers/jellyfin/jellyfin_data_provider.dart';
 
 class JellyfinMediaCard extends StatefulWidget {
   final JellyfinMediaItem item;
-  final JellyfinDataProvider dataProvider;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final bool showProgress;
@@ -19,7 +17,6 @@ class JellyfinMediaCard extends StatefulWidget {
   const JellyfinMediaCard({
     super.key,
     required this.item,
-    required this.dataProvider,
     this.onTap,
     this.onLongPress,
     this.showProgress = false,

@@ -387,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.video_library_rounded),
-                label: 'Settings',
+                label: 'Jellyfin',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.settings_rounded),
