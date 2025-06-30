@@ -230,9 +230,6 @@ class _JellyfinScreenState extends State<JellyfinScreen>
               isLoading: dataProvider.isLoadingNextUp,
             ),
 
-          // Recent Activity
-          SliverToBoxAdapter(child: _buildRecentActivity(dataProvider)),
-
           // Bottom padding
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
@@ -273,28 +270,50 @@ class _JellyfinScreenState extends State<JellyfinScreen>
   }
 
   Widget _buildHorizontalSection(
-    String title,
-    List<JellyfinMediaItem> items, {
-    bool showProgress = false,
-    bool isLoading = false,
-    String? error,
-    VoidCallback? onRefresh,
-  }) {
+      String title,
+      List<JellyfinMediaItem> items, {
+        bool showProgress = false,
+        bool isLoading = false,
+        String? error,
+        VoidCallback? onRefresh,
+      }) {
     return SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Section Header - matching MediaSection style
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: 3,
+                        width: 40,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context).colorScheme.secondary,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const Spacer(),
 
                 if (isLoading)
                   SizedBox(
@@ -304,14 +323,20 @@ class _JellyfinScreenState extends State<JellyfinScreen>
                   ),
 
                 if (error != null && onRefresh != null)
-                  IconButton(
+                  TextButton.icon(
                     onPressed: onRefresh,
-                    icon: Icon(Icons.refresh_rounded),
-                    tooltip: 'Retry',
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Retry'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
                   ),
               ],
             ),
           ),
+
+          const SizedBox(height: 12),
 
           if (error != null)
             Container(
@@ -343,48 +368,63 @@ class _JellyfinScreenState extends State<JellyfinScreen>
               ),
             )
           else
+          // Media List - matching MediaSection dimensions
             SizedBox(
-              height: 200,
+              height: 280, // Same as MediaSection
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 8), // Same as MediaSection
                 itemCount: items.length,
                 itemBuilder: (context, index) {
-                  final item = items[index];
-                  return Container(
-                    width: 140,
-                    margin: const EdgeInsets.only(right: 12),
-                    child: _buildMediaCard(
-                      item,
-                      context.read<JellyfinDataProvider>(),
-                      showProgress: showProgress,
-                    ),
+                  return TweenAnimationBuilder<double>(
+                    duration: Duration(milliseconds: 300 + (index * 100)),
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    curve: Curves.elasticOut,
+                    builder: (context, value, child) {
+                      return Transform.scale(
+                        scale: value,
+                        child: _buildMediaCard(
+                          items[index],
+                          context.read<JellyfinDataProvider>(),
+                          showProgress: showProgress,
+                          index: index,
+                        ),
+                      );
+                    },
                   );
                 },
               ),
             ),
+
+          const SizedBox(height: 24), // Same spacing as MediaSection
         ],
       ),
     );
   }
 
   Widget _buildMediaCard(
-    JellyfinMediaItem item,
-    JellyfinDataProvider dataProvider, {
-    bool showProgress = false,
-  }) {
-    return JellyfinMediaCard(
-      item: item,
-      dataProvider: dataProvider,
-      showProgress: showProgress,
+      JellyfinMediaItem item,
+      JellyfinDataProvider dataProvider, {
+        bool showProgress = false,
+        int? index,
+      }) {
+    return Container(
+      width: 160, // Same width as MediaSection
+      margin: const EdgeInsets.symmetric(horizontal: 8), // Same margin as MediaSection
+      child: JellyfinMediaCard(
+        item: item,
+        dataProvider: dataProvider,
+        showProgress: showProgress,
+        heroTag: index != null ? 'jellyfin_media_${item.id}_index_$index' : null,
+      ),
     );
   }
 
   Widget _buildLibraryCard(
-    String libraryName,
-    List<JellyfinMediaItem> items,
-    JellyfinDataProvider dataProvider,
-  ) {
+      String libraryName,
+      List<JellyfinMediaItem> items,
+      JellyfinDataProvider dataProvider,
+      ) {
     final theme = Theme.of(context);
 
     return Container(
@@ -434,18 +474,23 @@ class _JellyfinScreenState extends State<JellyfinScreen>
           ),
 
           if (items.isNotEmpty)
+          // Updated library card ListView to match MediaSection
             SizedBox(
-              height: 160,
+              height: 280, // Same height as main sections
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 16), // Consistent padding
                 itemCount: items.take(10).length,
                 itemBuilder: (context, index) {
                   final item = items[index];
                   return Container(
-                    width: 100,
-                    margin: const EdgeInsets.only(right: 8),
-                    child: _buildMediaCard(item, dataProvider),
+                    width: 140, // Same width as main sections
+                    margin: const EdgeInsets.symmetric(horizontal: 8), // Consistent margin
+                    child: JellyfinMediaCard(
+                      item: item,
+                      dataProvider: dataProvider,
+                      heroTag: 'jellyfin_library_${libraryName}_${item.id}_$index',
+                    ),
                   );
                 },
               ),
